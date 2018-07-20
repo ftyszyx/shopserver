@@ -69,8 +69,6 @@ nohup command > myout.file 2>&1 &
 强制类型转换：
 int64(a) 
 
-wechat:
-GET /wchat?signature=968d22aec1a1477d5fab3aa84ad7d900b044abc0&echostr=17150479667081117623&timestamp=1529466263&nonce=483106845 HTTP/1.0 200 0" 0.000311  Mozilla/4.0
 
 netapp -authtoken    d2ca7c6ba422f9dd 
 web:http://k9xmvz.natappfree.cc
