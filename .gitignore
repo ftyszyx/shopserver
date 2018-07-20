@@ -1,0 +1,10 @@
+/shop.exe
+/shop.exe~
+/conf/app.conf
+/shop_server.exe
+/shop_server.exe~
+*.exe
+*.exe~
+*.log
+/debug
+/static/upload

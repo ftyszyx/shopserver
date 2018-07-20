@@ -1,0 +1,94 @@
+<!-- banner start -->
+<!-- ================ -->
+<div class="banner">
+
+	<!-- slideshow start -->
+	<!-- ================ -->
+	<div class="slideshow white-bg">
+
+		<!-- slider revolution start -->
+		<!-- ================ -->
+		<div class="slider-banner-container">
+			<div class="slider-banner-3">
+				<ul>
+					{{range $index,$item:=.data.swipe}}
+					<li data-transition="fade">
+						<img src="{{.pic}}">
+					</li>
+					{{end}}
+				</ul>
+			</div>
+		</div>
+		<!-- slider revolution end -->
+
+	</div>
+	<!-- slideshow end -->
+
+</div>
+<!-- banner end -->
+<div class="section clearfix object-non-visible animated object-visible fadeInUpSmall" data-animation-effect="fadeInUpSmall"
+    data-effect-delay="200">
+	<div class="container">
+		<h2 class="text-center">关于我们</h2>
+		<div class="separator"></div>
+		<p class="lead text-center">ABOUT US</p>
+		<br>
+		<div class="row">
+			<div class="col-md-6">
+				<img src="{{.data.about.pic}}" alt="">
+				<div class="space hidden-md hidden-lg"></div>
+			</div>
+			<div class="col-md-6">
+				<p class="space-top">
+					{{.data.about.post_summary}}
+				</p>
+				<a href="/home/post/{{.data.about.post_id}}" class="btn btn-sm btn-default">查看更多</a>
+			</div>
+		</div>
+	</div>
+</div>
+{{template "home/product.html" .}}
+<!-- main-container end -->
+<div class="section clearfix">
+
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+
+				<h2 class="page-title text-center">新闻中心</h2>
+				<div class="separator"></div>
+				<p class="lead text-center">NEWS CENTER</p>
+				<div class="owl-carousel carousel">
+					{{if .data.news}} {{range $index,$item:=.data.news}}
+					<div class="image-box object-non-visible" data-animation-effect="fadeInLeft" data-effect-delay="300">
+						<div class="overlay-container">
+							<img src="{{.pic}}" alt="">
+							<div class="overlay">
+								<div class="overlay-links">
+									<a href="/home/post/{{.post_id}}">
+										<i class="fa fa-link"></i>
+									</a>
+									<a href="{{.pic}}" class="popup-img">
+										<i class="fa fa-search-plus"></i>
+									</a>
+								</div>
+							</div>
+						</div>
+						<div class="image-box-body">
+							<h4 class="title">
+								<a href="/home/post/{{.post_id}}">{{.post_title}}</a>
+							</h4>
+							<p> {{.post_summary}}</p>
+							<a href="/home/post/{{.post_id}}" class="link">
+								<span>查看更多</span>
+							</a>
+						</div>
+					</div>
+					{{end}} {{end}}
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</div>

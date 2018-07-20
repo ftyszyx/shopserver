@@ -1,0 +1,91 @@
+
+<div class="page-intro">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<ol class="breadcrumb">
+					<li>
+						<i class="fa fa-home pr-10"></i>
+						<a href="/home">主页</a>
+					</li>
+					<li class="active">新闻动态</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- page-intro end -->
+<section class="main-container">
+
+	<div class="container">
+		<div class="row">
+
+			<!-- main start -->
+			<!-- ================ -->
+			<div class="main col-md-12">
+
+				<!-- page-title start -->
+				<!-- ================ -->
+				<h2 class="page-title">新闻动态</h2>
+				<div class="separator-2"></div>
+				<p class="lead">
+					了解优飞最新动态
+				</p>
+				<!-- page-title end -->
+
+				<!-- masonry grid start -->
+				<div class="masonry-grid row">
+
+					<!-- masonry grid item start -->
+					{{range $index,$item:=.data.news}}
+					<div class="masonry-grid-item col-sm-6">
+						<!-- blogpost start -->
+						<article class="clearfix blogpost">
+							<div class="overlay-container">
+								<img src="{{.pic}}" alt="">
+								<div class="overlay">
+									<div class="overlay-links">
+										<a href="/home/post/{{.post_id}}">
+											<i class="fa fa-link"></i>
+										</a>
+										<a href="{{.pic}}" class="popup-img">
+											<i class="fa fa-search-plus"></i>
+										</a>
+									</div>
+								</div>
+							</div>
+							<div class="blogpost-body">
+								<div class="post-info">
+									<span class="day">{{formatTimestamp .post_build_time "d"}}</span>
+									<span class="month">{{formatTimestamp .post_build_time "m/M Y"}}</span>
+								</div>
+								<div class="blogpost-content">
+									<header>
+										<h2 class="title">
+											<a href="/home/post/{{.post_id}}">{{.post_title}}</a>
+										</h2>
+										<!-- <div class="submitted"><i class="fa fa-user pr-5"></i> by <a href="#">系统管理员</a></div> -->
+									</header>
+									<p> {{.post_summary}}</p>
+								</div>
+							</div>
+							<!-- <footer class="clearfix">
+											<ul class="links pull-left">
+												<li><i class="fa fa-eye pr-5"></i> <a href="#">22</a> |</li> 
+												<li><i class="fa fa-tags pr-5"></i> <a href="#">标签一</a></li>
+											</ul>
+											<a class="pull-right link" href="news-detail.html"><span>查看更多</span></a>
+										</footer> -->
+						</article>
+						<!-- blogpost end -->
+					</div>
+					{{end}}
+
+				</div>
+				<!-- masonry grid end -->
+
+			</div>
+			<!-- main end -->
+		</div>
+	</div>
+</section>

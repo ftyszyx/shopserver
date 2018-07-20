@@ -1,0 +1,54 @@
+<div class="banner">
+    <img src="{{.postinfo.pic}}" />
+</div>
+<!-- banner end -->
+
+<!-- page-intro start-->
+<!-- ================ -->
+<div class="page-intro">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li>
+                        <i class="fa fa-home pr-10"></i>
+                        <a href="/home">主页</a>
+                    </li>
+                    <li class="active">{{.postinfo.title}}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- page-intro end -->
+<section class="main-container">
+
+    <div class="container">
+        <div class="row">
+
+            <div class="main col-md-12">
+
+                <!-- page-title start -->
+                <!-- ================ -->
+                <h2 class="page-title">{{.postinfo.title}}</h2>
+                <!-- page-title end -->
+
+                <!-- blogpost start -->
+                <article class="clearfix blogpost full">
+                    <div class="blogpost-body">
+                        <div class="side">
+                            <div class="post-info">
+                                <span class="day">{{formatTimestamp .postinfo.build_time "d"}}</span>
+                                <span class="month">{{formatTimestamp .postinfo.build_time "M Y"}}</span>
+                            </div>
+                        </div>
+                        <div class="blogpost-content">
+                            {{str2html .postinfo.content}}
+                        </div>
+                    </div>
+                </article>
+                <!-- blogpost end -->
+            </div>
+        </div>
+    </div>
+</section>

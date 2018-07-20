@@ -1,0 +1,77 @@
+<!-- main-container start -->
+<!-- ================ -->
+<section class="main-container object-non-visible" data-animation-effect="fadeInUpSmall" data-effect-delay="200">
+
+    <div class="container">
+        <div class="row">
+
+            <!-- main start -->
+            <!-- ================ -->
+            <div class="main col-md-12">
+
+                <!-- page-title start -->
+                <!-- ================ -->
+                <h2 class="page-title text-center">产品展示</h2>
+                <div class="separator"></div>
+                <p class="lead text-center">PRODUCT DISPLAY</p>
+                <!-- page-title end -->
+
+                <!-- isotope filters start -->
+                <div class="filters text-center">
+                    <ul class="nav nav-pills">
+
+                        <li class="active">
+                            <a href="#" data-filter="*">所有产品</a>
+                        </li>
+                        <li>
+                            <a href="#" data-filter=".product1">{{.data.productname1}}</a>
+                        </li>
+                        <li>
+                            <a href="#" data-filter=".product2">{{.data.productname2}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- isotope filters end -->
+
+            </div>
+            <!-- main end -->
+        </div>
+    </div>
+
+    <!-- section start -->
+    <!-- ================ -->
+    <div class="gray-bg section">
+        <div class="container">
+            <!-- portfolio items start -->
+            <div class="isotope-container row grid-space-10">
+                {{range $index,$item:=.data.product1}}
+                <div class="col-sm-6 col-md-3 isotope-item product1">
+                    <div class="box-style-1 white-bg">
+                        <div class="overlay-container">
+                            <img src="{{.pic}}">
+                            <a href="/home/post/{{.post_id}}" class="overlay small">
+                                <i class="fa fa-plus"></i>
+                                <span>{{.post_title}}</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {{end}} {{range $index,$item:=.data.product2}}
+                <div class="col-sm-6 col-md-3 isotope-item product2">
+                    <div class="box-style-1 white-bg">
+                        <div class="overlay-container">
+                            <img src="{{.pic}}">
+                            <a href="/home/post/{{.post_id}}" class="overlay small">
+                                <i class="fa fa-plus"></i>
+                                <span>{{.post_title}}</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            <!-- portfolio items end -->
+        </div>
+    </div>
+    <!-- section end -->
+</section>
