@@ -13,8 +13,9 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/orm"
+	"github.com/pkg/errors"
 	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 //数据库备份还原
@@ -22,10 +23,7 @@ type DatabaseController struct {
 	BaseController
 }
 
-func (self *DatabaseController) BeforeSql(data map[string]interface{}) {
-
-}
-func (self *DatabaseController) AfterSql(data map[string]interface{}, oldinfo orm.Params) {
+func (self *DatabaseController) AfterSql(data map[string]interface{}, oldinfo db.Params) error {
 	if self.method == "Del" {
 		manger := libs.GetManger()
 		host := beego.AppConfig.String("qiniu.host")
@@ -34,58 +32,64 @@ func (self *DatabaseController) AfterSql(data map[string]interface{}, oldinfo or
 		logs.Info("del key:%s", key)
 		err := manger.Delete(bucket, key)
 		if err != nil {
-			self.AjaxReturnError(err.Error())
-			return
+			return err
 		}
 		self.AddLog(fmt.Sprintf("%+v", data))
 	} else {
 		self.AddLog(fmt.Sprintf("%+v", data))
 	}
+	return nil
 }
 
 var savefilename = "databackup"
 
-// var fileMaxSize = 10485760 //最大的文件
 var insert_max_num = 500
 
 func (self *DatabaseController) Add() {
-	self.CheckFieldExit(self.postdata, "name", "名字不能为空")
-	path, err := SaveDatabase()
+	self.CheckFieldExitAndReturn(self.postdata, "name", "名字不能为空")
+	path, err := SaveDatabase(self.dboper)
 	if err != nil {
-		logs.Error(err.Error())
-		self.AjaxReturnError(err.Error())
+		logs.Error("%+v", err)
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 	adddata := make(map[string]interface{})
 	adddata["name"] = self.postdata["name"]
 	adddata["user_id"] = self.uid
 	adddata["build_time"] = time.Now().Unix()
 	adddata["path"] = path
-	self.AddCommonExe(self, adddata)
+	err = self.AddCommonExe(self, adddata)
+	if err != nil {
+		self.AjaxReturnError(errors.WithStack(err))
+	}
+	self.AjaxReturnSuccessNull()
 }
 
 func (self *DatabaseController) Edit() {
-	self.CheckFieldExit(self.postdata, "name", "名字不能为空")
-	self.CheckFieldExit(self.postdata, "id", "id空")
+	self.CheckFieldExitAndReturn(self.postdata, "name", "名字不能为空")
+	self.CheckFieldExitAndReturn(self.postdata, "id", "id空")
 	changedata := make(map[string]interface{})
 	changedata["name"] = self.postdata["name"]
-	self.updateSqlById(self, changedata, self.postdata["id"])
+	self.updateSqlByIdAndReturn(self, changedata, self.postdata["id"])
 }
 
 func (self *DatabaseController) Del() {
-	self.DelCommon(self)
+	self.DelCommonAndReturn(self)
 }
 
 //还原
 func (self *DatabaseController) Restore() {
-	self.CheckFieldExit(self.postdata, "id", "id空")
-	info := self.model.GetInfoById(self.postdata["id"])
+	self.CheckFieldExitAndReturn(self.postdata, "id", "id空")
+	info := self.model.GetInfoById(self.dboper, self.postdata["id"])
 	if info == nil {
-		self.AjaxReturnError("找不到")
+
+		self.AjaxReturnError(errors.New("找不到"))
 	}
 	err := RestoreDatabase(info["path"].(string))
+
 	if err != nil {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
+	self.AddLog(fmt.Sprintf("%+v", self.postdata["id"]))
 	self.AjaxReturnSuccess("", nil)
 }
 
@@ -95,7 +99,7 @@ func getSqlfilePath() string {
 }
 
 //保存数据库
-func SaveDatabase() (string, error) {
+func SaveDatabase(dboper db.DBOperIO) (string, error) {
 	var filepatharr []string
 	// var fileindex = 1
 	filepath := getSqlfilePath()
@@ -106,12 +110,10 @@ func SaveDatabase() (string, error) {
 	}
 	defer fileio.Close()
 	filepatharr = append(filepatharr, filepath)
-	tablelist, err := libs.GetTableList()
+	tablelist, err := libs.GetTableList(dboper)
 	if err != nil {
 		return "", err
 	}
-	// var sqlstring bytes.Buffer
-
 	fileio.WriteString("SET FOREIGN_KEY_CHECKS=0;")
 	fileio.WriteString(libs.SqlLineEnd)
 	for _, tableinfo := range tablelist {
@@ -134,7 +136,7 @@ func SaveDatabase() (string, error) {
 		fileio.WriteString(libs.SqlLineEnd)
 		fileio.WriteString(fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", tablename))
 		fileio.WriteString(libs.SqlLineEnd)
-		tablestr, err := libs.GetTableString(tablename)
+		tablestr, err := libs.GetTableString(tablename, dboper)
 		if err != nil {
 			return "", err
 		}
@@ -149,9 +151,9 @@ func SaveDatabase() (string, error) {
 		fileio.WriteString("-- ----------------------------")
 		fileio.WriteString(libs.SqlLineEnd)
 
-		var dataList []orm.Params
-		db := orm.NewOrm()
-		_, err = db.Raw("select count(*) as countnum from " + tablename).Values(&dataList)
+		var dataList []db.Params
+		// db := orm.NewOrm()
+		_, err = dboper.Raw("select count(*) as countnum from " + tablename).Values(&dataList)
 		if err != nil {
 			return "", err
 		}
@@ -164,40 +166,15 @@ func SaveDatabase() (string, error) {
 		pagenum := (totalrow / insert_max_num) + 1
 		for curpage := 0; curpage < pagenum; curpage++ {
 			startrow := insert_max_num * curpage
-			rowstr, err := libs.GetInsertSql(tablename, startrow, insert_max_num)
+			rowstr, err := libs.GetInsertSql(tablename, startrow, insert_max_num, dboper)
 			if err != nil {
 				return "", err
 			}
 			fileio.WriteString(rowstr)
-			// if sqlstring.Len() > fileMaxSize {
-			// 	logs.Info("new file")
-			// 	_, err := fileio.WriteString(sqlstring.String())
-			// 	if err != nil {
-			// 		return "", err
-			// 	}
-			// 	sqlstring.Reset()
-			// 	fileio.Close()
-			// 	//新生成一个文件
-			// 	filepath := getSqlfilePath(fileindex)
-			// 	fileindex++
-			// 	fileio, err = os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-			// 	if err != nil {
-			// 		return "", err
-			// 	}
-			// 	defer fileio.Close()
-			// 	filepatharr = append(filepatharr, filepath)
-			// }
-
 		}
 	}
-	// _, err = fileio.WriteString(sqlstring.String())
-	// if err != nil {
-	// 	return "", err
-	// }
-	// sqlstring.Reset()
 	fileio.Close()
 
-	// logs.Info("begin zip file")
 	zippath := tempfolder + "databackall.zip"
 	err = libs.Compress(filepatharr, zippath)
 	if err != nil {
@@ -250,8 +227,8 @@ func RestoreDatabase(path string) error {
 		return err
 	}
 	//读sql文件
-	db := orm.NewOrm()
-	db.Begin()
+	dboper := db.NewOper()
+	dboper.Begin()
 	for _, fi := range fileInfos {
 		f, err := os.Open(releasepath + fi.Name())
 		if err != nil {
@@ -279,15 +256,15 @@ func RestoreDatabase(path string) error {
 				// logs.Error("get one")
 				sqltext := buffersql.String()
 				buffersql.Reset()
-				_, err := db.Raw(sqltext).Exec()
+				_, err := dboper.Raw(sqltext).Exec()
 				if err != nil {
-					db.Rollback()
+					dboper.Rollback()
 					return err
 				}
 
 			}
 		}
 	}
-	db.Commit()
+	dboper.Commit()
 	return nil
 }

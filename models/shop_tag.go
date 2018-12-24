@@ -1,6 +1,6 @@
 package models
 
-import "github.com/zyx/shop_server/libs"
+import "github.com/zyx/shop_server/libs/db"
 
 type ShopTag struct {
 	Model
@@ -12,7 +12,7 @@ type ShopTagData struct {
 	Order_id int
 }
 
-func (self *ShopTag) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *ShopTag) InitSqlField(sql db.SqlType) db.SqlType {
 	return sql
 }
 

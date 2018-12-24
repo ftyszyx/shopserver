@@ -1,0 +1,52 @@
+
+<div class="banner2">
+    <div class="banner-bd"><img src="/static/images/banner_about.jpg"></div>
+    <div class="banner-hd">
+        <div class="wrap clearfix">
+            <div class="colPicTit">
+                <h2>新闻中心</h2>
+                <p>EMPLOYMENT</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container tranAll">
+    <div class="wrap">
+        <div class="newsPage">
+            <div class="news-item-list">
+                <div class="news-list clearfix">
+
+                        {{range $index,$item:=.newlist}}
+						<div class="news-item clearfix">
+
+                                <div class="news-txt">
+                                    <div class="date clearfix">
+                                        <span>{{formatTimestamp .build_time "Y-m-d H:i"}}</span>
+                                        <a href="/new/{{.id}}">more</a>
+                                    </div>
+                                    <div class="title">
+                                        <h2><a href="/new/{{.id}}">{{.title}}</a></h2>
+                                    </div>
+                                    <div class="txt">
+                                        <p>{{.summary}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {{end}}
+                        
+                    
+                </div>
+            </div>
+            <div class="pager">
+                {{if gt .page 1}}
+                <a href="/newslist/{{minus .page 1}}">上一页</a>
+                {{end}}
+                <li><span class="pageinfo">第{{.page}} 页/共{{.total}} 条记录</span></li>
+                {{if lt .page .totalpage}}
+                <a href="/newslist/{{add .page 1}}">下一页</a>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>

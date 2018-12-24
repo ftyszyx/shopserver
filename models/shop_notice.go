@@ -1,8 +1,7 @@
 package models
 
 import (
-	"github.com/astaxie/beego/orm"
-	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type ShopNotice struct {
@@ -15,7 +14,7 @@ type ShopNoticeData struct {
 	Order_id int
 }
 
-func (self *ShopNotice) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *ShopNotice) InitSqlField(sql db.SqlType) db.SqlType {
 	return sql
 }
 
@@ -23,7 +22,7 @@ func (self *ShopNotice) GetModelStruct() interface{} {
 	return ShopNoticeData{}
 }
 
-var NoticeCache []orm.Params //主页广告缓存
+var NoticeCache []db.Params //主页广告缓存
 
 func (self *ShopNotice) Init() {
 	self.resetCache()
@@ -32,7 +31,7 @@ func (self *ShopNotice) Init() {
 
 func (self *ShopNotice) resetCache() {
 
-	NoticeCache = self.GetInfoByField("is_del", 0)
+	NoticeCache = self.GetInfoByField(db.NewOper(), "is_del", 0)
 
 }
 

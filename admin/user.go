@@ -5,12 +5,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/orm"
 
 	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 	"github.com/zyx/shop_server/models"
+	"github.com/zyx/shop_server/wechat"
 )
 
 type UserController struct {
@@ -18,41 +21,48 @@ type UserController struct {
 }
 
 //检查数据正确性
-func (self *UserController) checkData(data map[string]interface{}) {
+func (self *UserController) checkData(data map[string]interface{}) error {
 	groupModel := models.GetModel(models.USERGROUP)
 	logs.Info("checkData")
 	if value, ok := data["user_group"]; ok {
 
 		groupid := value.(string)
-		groupinfo := groupModel.GetInfoById(groupid)
+		groupinfo := groupModel.GetInfoById(self.dboper, groupid)
 		if groupinfo == nil {
-			self.AjaxReturnError("用户组不对")
+
+			return errors.New("用户组不对")
 		}
 		grouptype := groupinfo["group_type"].(string)
 		if grouptype == strconv.Itoa(libs.UserSystem) {
-			self.AjaxReturnError("系统用户组不可设")
+
+			return errors.New("系统用户组不可设")
 		}
 	}
+	return nil
 }
 
-func (self *UserController) BeforeSql(data map[string]interface{}) {
+func (self *UserController) BeforeSql(data map[string]interface{}) error {
 	if self.method == "Add" {
-		self.checkData(self.postdata)
+		err := self.checkData(self.postdata)
+		if err != nil {
+			return err
+		}
 		defaultPass := beego.AppConfig.String("user.defaultPssword")
 		logs.Info("default pass:%s", defaultPass)
 		data["password"] = libs.GetStrMD5(defaultPass)
 		data["reg_time"] = time.Now().Unix()
 	} else if self.method == "Edit" {
-		self.checkData(self.postdata)
+		return self.checkData(self.postdata)
 	} else if self.method == "ChangeValid" {
-		self.CheckFieldExit(self.postdata, "is_del", "数据空")
+
+		if self.CheckFieldExit(self.postdata, "is_del") == false {
+			return errors.New("数据空")
+		}
 		data["is_del"] = self.postdata["is_del"]
-	} else if self.method == "ChangePassword" {
-		self.CheckFieldExit(self.postdata, "password", "密码为空")
-		data["password"] = libs.GetStrMD5(self.postdata["password"].(string))
 	}
+	return nil
 }
-func (self *UserController) AfterSql(data map[string]interface{}, oldinfo orm.Params) {
+func (self *UserController) AfterSql(data map[string]interface{}, oldinfo db.Params) error {
 	if self.method == "Add" {
 		self.AddLog(fmt.Sprintf("增加角色:%+v", data))
 	} else if self.method == "Edit" {
@@ -66,22 +76,19 @@ func (self *UserController) AfterSql(data map[string]interface{}, oldinfo orm.Pa
 		self.model.ClearRowCache(id)
 	} else if self.method == "ChangeValid" {
 		id := self.postdata["id"].(string)
-		oldinfo := self.model.GetInfoById(self.uid)
 		username := oldinfo["name"]
 		valid := self.postdata["is_valid"]
 		self.AddLog(fmt.Sprintf("修改角色有效:%s %+v", username, valid))
 		self.model.ClearRowCache(id)
 	} else if self.method == "ChangePassword" {
-		oldinfo := self.model.GetInfoById(self.uid)
 		username := oldinfo["name"]
 		self.AddLog(fmt.Sprintf("修改角色密码:%s", username))
-
 		self.model.ClearRowCache(self.uid)
 	} else if self.method == "UpdateCart" {
-		oldinfo := self.model.GetInfoById(self.uid)
-		username := oldinfo["name"]
-		self.AddLog(fmt.Sprintf("修改角色购物车:%s", username))
-
+		self.AddLog(fmt.Sprintf("%+v", data))
+		self.model.ClearRowCache(self.uid)
+	} else if self.method == "UpdateAddress" {
+		self.AddLog(fmt.Sprintf("%+v", data))
 		self.model.ClearRowCache(self.uid)
 	} else if self.method == "RefreshToken" {
 		self.AddLog(fmt.Sprintf("%+v", data))
@@ -89,61 +96,98 @@ func (self *UserController) AfterSql(data map[string]interface{}, oldinfo orm.Pa
 		senddata["user_token"] = data["user_token"]
 		senddata["token_expire"] = data["token_expire"]
 		self.AjaxReturnSuccess("", senddata)
-
+	} else if self.method == "ResetPassword" {
+		self.AddLog(fmt.Sprintf("重置密码：%s", oldinfo["name"]))
+		self.model.ClearRowCache(self.uid)
 	} else {
 		self.AddLog(fmt.Sprintf("%+v", data))
 	}
+	return nil
 }
 
 func (self *UserController) ChangeValid() {
-	self.EditCommon(self)
+	self.EditCommonAndReturn(self)
 }
 
 func (self *UserController) ChangePassword() {
-	self.postdata["id"] = self.uid
-	self.EditCommon(self)
+
+	self.CheckFieldExitAndReturn(self.postdata, "password", "密码不能为空")
+	changedata := make(map[string]interface{})
+	changedata["password"] = libs.GetStrMD5(self.postdata["password"].(string))
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
 }
 
 func (self *UserController) Add() {
-	self.AddCommon(self)
+	self.AddCommonAndReturn(self)
 }
 
 func (self *UserController) Edit() {
-	self.EditCommon(self)
+
+	self.EditCommonAndReturn(self)
 }
 
 func (self *UserController) Del() {
-	self.DelCommon(self)
+	self.AjaxReturnError(errors.New("不能删除用户"))
+	self.DelCommonAndReturn(self)
 }
 
 func (self *UserController) UpdateName() {
-	self.CheckFieldExit(self.postdata, "name", "姓名不能为空")
+	self.CheckFieldExitAndReturn(self.postdata, "name", "姓名不能为空")
 	changedata := make(map[string]interface{})
 	changedata["name"] = self.postdata["name"]
-	self.updateSqlById(self, changedata, self.uid)
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
+}
+
+func (self *UserController) UpdateAccount() {
+	self.CheckFieldExitAndReturn(self.postdata, "account", "账号不能为空")
+	if self.model.CheckExit(self.dboper, "account", self.postdata["account"]) == true {
+		self.AjaxReturnError(errors.New("账号名已存在,修改失败"))
+	}
+	changedata := make(map[string]interface{})
+	changedata["account"] = self.postdata["account"]
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
 }
 
 func (self *UserController) UpdateHead() {
-	self.CheckFieldExit(self.postdata, "head", "头像不能为空")
+	self.CheckFieldExitAndReturn(self.postdata, "head", "头像不能为空")
 	changedata := make(map[string]interface{})
 	changedata["head"] = self.postdata["head"]
-	self.updateSqlById(self, changedata, self.uid)
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
 }
 
 func (self *UserController) UpdatePhone() {
-	self.CheckFieldExit(self.postdata, "phone", "手机号不能为空")
-	self.CheckFieldExit(self.postdata, "code", "验证码不能为空")
+	self.CheckFieldExitAndReturn(self.postdata, "phone", "手机号不能为空")
+	self.CheckFieldExitAndReturn(self.postdata, "code", "验证码不能为空")
 	phone := self.postdata["phone"].(string)
 	code := self.postdata["code"].(string)
 
 	codestr, ok := models.PhoneCodeCache.Get(phone).(string)
 	if ok == false || codestr == "" || codestr != code {
-		self.AjaxReturnError("验证码不对")
+		self.AjaxReturnError(errors.New("验证码不对"))
 	}
 	changedata := make(map[string]interface{})
 	changedata["phone"] = phone
-	self.updateSqlById(self, changedata, self.uid)
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
 
+}
+
+func (self *UserController) ResetPassword() {
+
+	self.CheckFieldExitAndReturn(self.postdata, "id", "id不能为空")
+
+	changedata := make(map[string]interface{})
+	// password := string(utils.RandomCreateBytes(6))
+	password := beego.AppConfig.String("user.defaultPssword")
+	changedata["password"] = libs.GetStrMD5(password)
+
+	//self.updateSqlByIdAndReturn(self.dboper,self,changedata, self.postdata["id"])
+
+	err := self.updateSqlCommon(self, changedata, "id", self.postdata["id"])
+	if err != nil {
+		self.AjaxReturnError(errors.WithStack(err))
+	}
+
+	self.AjaxReturnSuccess("", map[string]interface{}{"newpass": password})
 }
 
 //添加购物车
@@ -153,7 +197,7 @@ func (self *UserController) UpdateCart() {
 	}
 	changedata := make(map[string]interface{})
 	changedata["shop_cart"] = self.postdata["shop_cart"]
-	self.updateSqlById(self, changedata, self.uid)
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
 }
 
 func (self *UserController) UpdateAddress() {
@@ -162,7 +206,7 @@ func (self *UserController) UpdateAddress() {
 	}
 	changedata := make(map[string]interface{})
 	changedata["address"] = self.postdata["address"]
-	self.updateSqlById(self, changedata, self.uid)
+	self.updateSqlByIdAndReturn(self, changedata, self.uid)
 }
 
 //获取角色信息
@@ -175,16 +219,21 @@ func (self *UserController) GetUserInfo() {
 	if id == "" {
 		self.AjaxReturn(libs.AuthFail, "uid空", nil)
 	}
-	userInfo := usermodel.GetInfoAndCache(id, false) //更新缓存
+	userInfo := usermodel.GetInfoAndCache(self.dboper, id, false) //更新缓存
 	if userInfo == nil {
 		self.AjaxReturn(libs.ErrorCode, "无效", nil)
 	}
 	var data = make(map[string]interface{})
-	groupinfo := groupmodel.GetInfoAndCache(userInfo["user_group"].(string), false)
+	groupinfo := groupmodel.GetInfoAndCache(self.dboper, userInfo["user_group"].(string), false)
+	if groupinfo == nil {
+		self.AjaxReturn(libs.ErrorCode, "用户组不存在", nil)
+	}
 	data["groupinfo"] = groupinfo
 	data["head"] = userInfo["head"]
 
-	if groupinfo["group_type"].(string) == strconv.Itoa(libs.UserAdmin) {
+	grouptype := groupinfo["group_type"].(string)
+	data["limit_show_order"] = groupinfo["limit_show_order"]
+	if grouptype == strconv.Itoa(libs.UserAdmin) {
 		var modules []interface{}
 		modulelist := modulemodel.Cache()
 		for _, vlaue := range modulelist {
@@ -204,28 +253,28 @@ func (self *UserController) GetUserInfo() {
 	data["name"] = userInfo["name"]
 	expiretime, err := strconv.Atoi(groupinfo["expire_time"].(string))
 	if err != nil {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
-	usermodel.(*models.User).ExtendExpireTime(id, expiretime) //延长时间
+	usermodel.(*models.User).ExtendExpireTime(self.dboper, id, expiretime) //延长时间
 	self.AjaxReturn(libs.SuccessCode, nil, data)
 }
 
 //刷新token
 func (self *UserController) RefreshToken() {
 	userGroupModel := models.GetModel(models.USERGROUP)
-	self.CheckFieldExit(self.postdata, "id", "操作对象空")
+	self.CheckFieldExitAndReturn(self.postdata, "id", "操作对象空")
 	changedata := make(map[string]interface{})
 	uid := self.postdata["id"].(string)
-	userinfo := self.model.GetInfoAndCache(uid, false)
+	userinfo := self.model.GetInfoAndCache(self.dboper, uid, false)
 	if userinfo == nil {
-		self.AjaxReturnError("角色不存在")
+		self.AjaxReturnError(errors.New("角色不存在"))
 	}
 	curtime := time.Now().Unix()
 	groupid := userinfo["user_group"].(string)
-	groupinfo := userGroupModel.GetInfoAndCache(groupid, false)
+	groupinfo := userGroupModel.GetInfoAndCache(self.dboper, groupid, false)
 	expiretime, err := strconv.Atoi(groupinfo["expire_time"].(string))
 	if err != nil {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 	usertoken := libs.GetToken(curtime, uid, userinfo["password"], groupid)
 	changedata["user_token"] = usertoken
@@ -233,7 +282,7 @@ func (self *UserController) RefreshToken() {
 	changedata["token_expire"] = curtime + int64(expiretime)
 	changedata["last_login_time"] = curtime
 	self.model.ClearRowCache(uid)
-	self.updateSqlById(self, changedata, uid)
+	self.updateSqlByIdAndReturn(self, changedata, uid)
 
 }
 
@@ -243,7 +292,7 @@ func (self *UserController) GetShopUserInfo() {
 	ordermodel := models.GetModel(models.SHOP_ORDER)
 	userGroupModel := models.GetModel(models.USERGROUP)
 	id := self.Ctx.Request.Header.Get("uid")
-	userInfo := usermodel.GetInfoAndCache(id, false) //更新缓存
+	userInfo := usermodel.GetInfoAndCache(self.dboper, id, false) //更新缓存
 
 	var data = make(map[string]interface{})
 	data["name"] = userInfo["name"]
@@ -252,25 +301,43 @@ func (self *UserController) GetShopUserInfo() {
 	data["phone"] = userInfo["phone"]
 	data["shop_cart"] = userInfo["shop_cart"]
 	data["head"] = userInfo["head"]
+	data["groupid"] = userInfo["user_group"]
 	data["address"] = userInfo["address"]
+	data["groupid"] = userInfo["user_group"]
 	data["wchat_openid"] = userInfo["wchat_openid"]
 	order := self.Input().Get("order")
 	if order != "" {
 		//要获取订单信息
-		data["order_waitpay"] = ordermodel.GetNumByField(map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusWaitPay})
-		data["order_pay"] = ordermodel.GetNumByField(map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusWaitSend})
-		data["order_send"] = ordermodel.GetNumByField(map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusSend})
-		data["order_refund"] = ordermodel.GetNumByField(map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusRefund})
+		data["order_waitpay"] = ordermodel.GetNumByField(self.dboper, map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusWaitPay})
+		data["order_pay"] = ordermodel.GetNumByField(self.dboper, map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusWaitcheck})
+		data["order_send"] = ordermodel.GetNumByField(self.dboper, map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusSend})
+		data["order_refund"] = ordermodel.GetNumByField(self.dboper, map[string]interface{}{"user_id": self.uid, "status": libs.OrderStatusRefund})
 	}
 	update := self.Input().Get("update")
 	if update != "" {
-
-		groupinfo := userGroupModel.GetInfoAndCache(userInfo["user_group"].(string), false)
+		groupinfo := userGroupModel.GetInfoAndCache(self.dboper, userInfo["user_group"].(string), false)
 		expiretime, err := strconv.Atoi(groupinfo["expire_time"].(string))
 		if err != nil {
-			self.AjaxReturnError(err.Error())
+			self.AjaxReturnError(errors.WithStack(err))
 		}
-		usermodel.(*models.User).ExtendExpireTime(id, expiretime) //延长时间
+		usermodel.(*models.User).ExtendExpireTime(self.dboper, id, expiretime) //延长时间
 	}
 	self.AjaxReturn(libs.SuccessCode, nil, data)
+}
+
+func (self *UserController) GetWchatJsConf() {
+	url := self.postdata["url"]
+	if url == nil {
+		self.AjaxReturnError(errors.New("参数错误"))
+	}
+	config, err := wechat.JsdkInstance.GetConfig(url.(string))
+	if err != nil {
+		self.AjaxReturnError(errors.WithStack(err))
+	}
+	senddata := make(map[string]interface{})
+	senddata["appid"] = config.AppID
+	senddata["timestamp"] = config.Timestamp
+	senddata["nonceStr"] = config.NonceStr
+	senddata["signature"] = config.Signature
+	self.AjaxReturnSuccess("", config)
 }

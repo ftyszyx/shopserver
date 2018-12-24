@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 
-	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type Post struct {
@@ -20,14 +20,14 @@ type PostData struct {
 }
 
 //LEFT JOIN `aq_sys_user` `check_user` ON `sell`.`check_user`=`check_user`.`id`
-func (self *Post) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *Post) InitSqlField(sql db.SqlType) db.SqlType {
 	return self.InitField(self.InitJoinString(sql, true))
 }
 
 func (self *Post) GetModelStruct() interface{} {
 	return PostData{}
 }
-func (self *Post) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType {
+func (self *Post) InitJoinString(sql db.SqlType, allfield bool) db.SqlType {
 	posttypeTableName := GetModel(POSTTYPE).TableName()
 	userTablename := GetModel(USER).TableName()
 
@@ -43,7 +43,7 @@ func (self *Post) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType {
 
 	return sql.Alias("post").Join(fieldstr)
 }
-func (self *Post) InitField(sql libs.SqlType) libs.SqlType {
+func (self *Post) InitField(sql db.SqlType) db.SqlType {
 	return sql.Field(map[string]string{
 		"user.name":       "build_user",
 		"posttype.name":   "typename",

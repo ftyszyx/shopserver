@@ -4,27 +4,34 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/pkg/errors"
+
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/orm"
 	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type UserGroupController struct {
 	BaseController
 }
 
-func (self *UserGroupController) BeforeSql(data map[string]interface{}) {
+func (self *UserGroupController) BeforeSql(data map[string]interface{}) error {
 	logs.Info("before sql:%s", self.method)
 	if self.method == "Del" {
 		grouptype := data["group_type"].(string)
 		if grouptype == strconv.Itoa(libs.UserSystem) {
-			self.AjaxReturnError("系统用户组不可删")
+
+			return errors.New("系统用户组不可删")
 		}
 	} else if self.method == "Add" {
-		data["group_type"] = libs.UserAdmin
+		if data["group_type"] == nil {
+			data["group_type"] = libs.UserAdmin
+		}
+
 	}
+	return nil
 }
-func (self *UserGroupController) AfterSql(data map[string]interface{}, oldinfo orm.Params) {
+func (self *UserGroupController) AfterSql(data map[string]interface{}, oldinfo db.Params) error {
 
 	if self.method == "Add" {
 		self.AddLog(fmt.Sprintf("增加用户组:%+v", data))
@@ -40,16 +47,18 @@ func (self *UserGroupController) AfterSql(data map[string]interface{}, oldinfo o
 	} else {
 		self.AddLog(fmt.Sprintf("%+v", data))
 	}
+	return nil
 }
 
 func (self *UserGroupController) Add() {
-	self.AddCommon(self)
+	self.AddCommonAndReturn(self)
 }
 
 func (self *UserGroupController) Edit() {
-	self.EditCommon(self)
+	self.EditCommonAndReturn(self)
 }
 
 func (self *UserGroupController) Del() {
-	self.DelCommon(self)
+	self.AjaxReturnError(errors.New("不能删除用户组"))
+	self.DelCommonAndReturn(self)
 }

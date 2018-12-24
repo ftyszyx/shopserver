@@ -2,48 +2,72 @@ package models
 
 import (
 	"fmt"
+	"runtime/debug"
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/orm"
 	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
+
+type Model struct {
+	tablename string
+	cache     map[string]db.Params
+}
 
 type ModelInterface interface {
 	Init()
 	TableName() string //表名
-	InitSqlField(libs.SqlType) libs.SqlType
-	InitJoinString(libs.SqlType, bool) libs.SqlType
-	InitField(libs.SqlType) libs.SqlType
-	GetInfoAndCache(string, bool) orm.Params
-	Cache() map[string]orm.Params
+	InitSqlField(db.SqlType) db.SqlType
+	InitJoinString(db.SqlType, bool) db.SqlType
+	InitField(db.SqlType) db.SqlType
+
+	Cache() map[string]db.Params
 	ClearCache()
 	ClearRowCache(string)
-	CheckExit(string, interface{}) bool
-	GetInfoById(interface{}) orm.Params
 	GetModelStruct() interface{}
-	GetInfoByField(string, interface{}) []orm.Params
-	GetNumByField(map[string]interface{}) int
-	GetInfoByWhere(string) []orm.Params
+
 	GetFieldName(string) string
-	ExportNameProcess(string, string) string
+	ExportNameProcess(string, interface{}, db.Params) (string, error)
+	GetInfoAndCache(db.DBOperIO, string, bool) db.Params
+	CheckExit(db.DBOperIO, string, interface{}) bool
+	GetInfoById(db.DBOperIO, interface{}) db.Params
+	AllExcCommon(db.DBOperIO, ModelInterface, AllReqData, int) (error, int, []db.Params)
+	GetInfoByField(db.DBOperIO, string, interface{}) []db.Params
+	GetNumByField(db.DBOperIO, map[string]interface{}) int
+	GetInfoByWhere(db.DBOperIO, string) ([]db.Params, error)
 }
 
-type Model struct {
-	tablename string
-	cache     map[string]orm.Params
+//获取所有时请求数据
+type AllReqData struct {
+	Page   int
+	Rownum int
+	Order  map[string]interface{}
+	And    bool
+	Search map[string]interface{}
 }
 
-func (self *Model) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType {
+func (self *Model) InitJoinString(sql db.SqlType, allfield bool) db.SqlType {
 	return sql
 }
-func (self *Model) InitField(sql libs.SqlType) libs.SqlType {
+func (self *Model) InitField(sql db.SqlType) db.SqlType {
 	return sql
 }
 
-func (self *Model) ExportNameProcess(name string, value string) string {
-	return value
+func (self *Model) ExportNameProcess(name string, value interface{}, row db.Params) (string, error) {
+	if value == nil {
+		logs.Info("field %s is nil", name)
+		return "", nil
+	}
+	datastr, ok := value.(string)
+	if ok == false {
+		return "", errors.New("upload file err:" + name + " not exit")
+	}
+	return datastr, nil
+
 }
 
 func (self *Model) GetFieldName(name string) string {
@@ -51,10 +75,10 @@ func (self *Model) GetFieldName(name string) string {
 }
 
 func (self *Model) ClearCache() {
-	self.cache = make(map[string]orm.Params)
+	self.cache = make(map[string]db.Params)
 }
 
-func (self *Model) Cache() map[string]orm.Params {
+func (self *Model) Cache() map[string]db.Params {
 	return self.cache
 }
 
@@ -62,7 +86,7 @@ func (self *Model) TableName() string {
 	return self.tablename
 }
 
-func (self *Model) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *Model) InitSqlField(sql db.SqlType) db.SqlType {
 	return sql
 }
 
@@ -75,13 +99,13 @@ func (self *Model) GetModelStruct() interface{} {
 }
 
 //检查是否存在某个数据
-func (self *Model) CheckExitMap(fieldinfo map[string]interface{}) bool {
-	db := orm.NewOrm()
-	var dataList []orm.Params
-	var sqltext libs.SqlType
-	sqltext = &libs.SqlBuild{}
+func (self *Model) CheckExitMap(oper db.DBOperIO, fieldinfo map[string]interface{}) bool {
+	// db := orm.NewOrm()
+	var dataList []db.Params
+	var sqltext db.SqlType
+	sqltext = &db.SqlBuild{}
 	sqltext = sqltext.Name(self.TableName())
-	num, err := db.Raw(sqltext.Where(fieldinfo).Find()).Values(&dataList)
+	num, err := oper.Raw(sqltext.Where(fieldinfo).Find()).Values(&dataList)
 	if err == nil && num > 0 {
 		return true
 	}
@@ -89,14 +113,14 @@ func (self *Model) CheckExitMap(fieldinfo map[string]interface{}) bool {
 }
 
 //检查是否存在
-func (self *Model) CheckExit(field string, value interface{}) bool {
+func (self *Model) CheckExit(oper db.DBOperIO, field string, value interface{}) bool {
 	data := make(map[string]interface{})
 	data[field] = value
-	return self.CheckExitMap(data)
+	return self.CheckExitMap(oper, data)
 }
 
 //获取表里面的一项，默认从内存取，如果内存没有，就从数据库取，并缓存。
-func (self *Model) GetInfoAndCache(uid string, forceUpdate bool) orm.Params {
+func (self *Model) GetInfoAndCache(oper db.DBOperIO, uid string, forceUpdate bool) db.Params {
 	if forceUpdate == false {
 		//读旧的
 		info, ok := self.cache[uid]
@@ -106,9 +130,9 @@ func (self *Model) GetInfoAndCache(uid string, forceUpdate bool) orm.Params {
 		}
 	}
 	// logs.Info("find info")
-	o := orm.NewOrm()
-	var dataList []orm.Params
-	num, err := o.Raw(fmt.Sprintf(`select * from %s where id=?`, self.TableName()), uid).Values(&dataList)
+	// o := orm.NewOrm()
+	var dataList []db.Params
+	num, err := oper.Raw(fmt.Sprintf(`select * from %s where id=?`, self.TableName()), uid).Values(&dataList)
 	if err == nil && num > 0 {
 		self.cache[uid] = dataList[0] //添加
 		// logs.Info("add info")
@@ -117,18 +141,18 @@ func (self *Model) GetInfoAndCache(uid string, forceUpdate bool) orm.Params {
 	return nil
 }
 
-func (self *Model) GetInfoById(id interface{}) orm.Params {
-	res := self.GetInfoByField("id", id)
+func (self *Model) GetInfoById(oper db.DBOperIO, id interface{}) db.Params {
+	res := self.GetInfoByField(oper, "id", id)
 	if res != nil {
 		return res[0]
 	}
 	return nil
 }
 
-func (self *Model) GetInfoByField(field string, value interface{}) []orm.Params {
-	o := orm.NewOrm()
-	var dataList []orm.Params
-	num, err := o.Raw(fmt.Sprintf("select * from %s where `%s`=?", self.TableName(), field), value).Values(&dataList)
+func (self *Model) GetInfoByField(oper db.DBOperIO, field string, value interface{}) []db.Params {
+	// o := orm.NewOrm()
+	var dataList []db.Params
+	num, err := oper.Raw(fmt.Sprintf("select * from %s where `%s`=?", self.TableName(), field), value).Values(&dataList)
 	if err == nil && num > 0 {
 		return dataList
 	}
@@ -140,16 +164,16 @@ func (self *Model) GetInfoByField(field string, value interface{}) []orm.Params 
 }
 
 //获取数量
-func (self *Model) GetNumByField(search map[string]interface{}) int {
-	o := orm.NewOrm()
+func (self *Model) GetNumByField(oper db.DBOperIO, search map[string]interface{}) int {
+	// o := orm.NewOrm()
 	totalnum := 0
-	var dataList []orm.Params
-	var sqltext libs.SqlType
-	sqltext = &libs.SqlBuild{}
+	var dataList []db.Params
+	var sqltext db.SqlType
+	sqltext = &db.SqlBuild{}
 	sqltext = sqltext.Name(self.TableName())
-	num, err := o.Raw(sqltext.Where(search).Count()).Values(&dataList)
+	num, err := oper.Raw(sqltext.Where(search).Count()).Values(&dataList)
 	if err == nil && num > 0 {
-		totalnum, err = strconv.Atoi(dataList[0][libs.SQL_COUNT_NAME].(string))
+		totalnum, err = strconv.Atoi(dataList[0][db.SQLTotalName].(string))
 		if err == nil {
 			return totalnum
 		}
@@ -161,18 +185,19 @@ func (self *Model) GetNumByField(search map[string]interface{}) int {
 	return 0
 }
 
-func (self *Model) GetInfoByWhere(where string) []orm.Params {
-	o := orm.NewOrm()
-	var dataList []orm.Params
-	num, err := o.Raw(fmt.Sprintf("select * from %s where %s", self.TableName(), where)).Values(&dataList)
+func (self *Model) GetInfoByWhere(oper db.DBOperIO, where string) ([]db.Params, error) {
+	// o := orm.NewOrm()
+	var dataList []db.Params
+	num, err := oper.Raw(fmt.Sprintf("select * from %s where %s", self.TableName(), where)).Values(&dataList)
 	if err == nil && num > 0 {
-		return dataList
+		return dataList, nil
 	}
 	if err != nil {
-		logs.Error("err:%s", err.Error())
+
+		return nil, errors.WithStack(err)
 	}
 
-	return nil
+	return nil, nil
 }
 
 //清除缓存
@@ -182,16 +207,100 @@ func (self *Model) ClearRowCache(id string) {
 }
 
 //添加日志
-func AddLog(uid string, info string, control string, method string) {
-	AddLogLink(uid, info, control, method, "")
+func AddLog(oper db.DBOperIO, uid string, info string, control string, method string) {
+	AddLogLink(oper, uid, info, control, method, "")
 }
 
-func AddLogLink(uid string, info string, control string, method string, link string) {
-	db := orm.NewOrm()
+func AddLogLink(oper db.DBOperIO, uid string, info string, control string, method string, link string) {
+	// db := orm.NewOrm()
 	logmodel := GetModel(LOG)
 	curtime := time.Now().Unix()
-	_, err := db.Raw(fmt.Sprintf("insert into %s (`userid`,`time`,`info`,`controller`,`method`,`link`) Values (?,?,?,?,?,?)", logmodel.TableName()), uid, curtime, info, control, method, link).Exec()
+	_, err := oper.Raw(fmt.Sprintf("insert into %s (`userid`,`time`,`info`,`controller`,`method`,`link`) Values (?,?,?,?,?,?)", logmodel.TableName()), uid, curtime, info, control, method, link).Exec()
 	if err != nil {
-		logs.Error("write log error:%s uid:%s control:%s method:%s", err.Error(), uid, control, method)
+		// return errors.Wrap(err, "addlog failed")
+		logs.Error("write log error:%+v uid:%s control:%s method:%s", err, uid, control, method)
+	}
+}
+
+func (self *Model) AllExcCommon(oper db.DBOperIO, model ModelInterface, data AllReqData, gettype int) (error, int, []db.Params) {
+
+	var totalnum = 0
+	var dataList []db.Params
+	var sqltext db.SqlType
+	sqltext = &db.SqlBuild{}
+	sqltext = sqltext.Name(model.TableName())
+
+	if data.And {
+		sqltext = sqltext.Where(data.Search)
+	} else {
+		sqltext = sqltext.WhereOr(data.Search)
+	}
+	sqltext = model.InitJoinString(sqltext, false)
+	num, err := oper.Raw(sqltext.Count()).Values(&dataList)
+	if err == nil && num > 0 {
+		totalnum, err = strconv.Atoi(dataList[0][db.SQLTotalName].(string))
+		if err != nil {
+			logs.Error("err:%+v statck:\n %s", err, string(debug.Stack()))
+			return errors.WithStack(err), 0, nil
+		}
+		if gettype == libs.GetAll_type_num {
+			return nil, totalnum, nil
+		}
+		sqltext = sqltext.Order(data.Order)
+		sqltext = model.InitJoinString(sqltext, false)
+		if data.Page == 0 {
+			//不用分页
+			sqltext = model.InitJoinString(model.InitField(sqltext), true)
+
+			num, err = oper.Raw(sqltext.Select()).Values(&dataList)
+			if err == nil {
+				return nil, totalnum, dataList
+			} else {
+				//logs.Error("err:%s statck:\n %s", err.Error(), string(debug.Stack()))
+				return errors.WithStack(err), 0, nil
+			}
+		} else {
+			//用分页
+			var start = (data.Page - 1) * data.Rownum
+			if totalnum > 1000 {
+				//总数很多
+				tablealias := sqltext.GetAlias()
+				selfidname := "id"
+				if tablealias != "" {
+					selfidname = tablealias + ".id"
+				}
+				subsql := sqltext.Limit([]int{start, data.Rownum}).Field(map[string]string{selfidname: "id"}).Select()
+				var newsqltext db.SqlType
+				newsqltext = &db.SqlBuild{}
+				newsqltext = newsqltext.Name(model.TableName()).Order(data.Order)
+				// newsqltext = newsqltext.Name(model.TableName())
+				newsqltext = model.InitJoinString(model.InitField(newsqltext), true)
+				oldjoinstr := newsqltext.GetJoinStr()
+				newsqltext.Join(oldjoinstr + fmt.Sprintf(" INNER join (%s) a ON `a`.`id`=%s ", subsql, db.SqlGetKey(selfidname)))
+				num, err = oper.Raw(newsqltext.Select()).Values(&dataList)
+				if err == nil {
+					return nil, totalnum, dataList
+				} else {
+					//logs.Error("err:%s statck:\n %s", err.Error(), string(debug.Stack()))
+					return errors.WithStack(err), 0, nil
+				}
+
+			} else {
+				//按正常方式
+				sqltext = model.InitJoinString(model.InitField(sqltext), true)
+				num, err = oper.Raw(sqltext.Limit([]int{start, data.Rownum}).Select()).Values(&dataList)
+				if err == nil {
+					return nil, totalnum, dataList
+				} else {
+					//logs.Error("err:%s statck:\n %s", err.Error(), string(debug.Stack()))
+
+					return errors.WithStack(err), 0, nil
+				}
+			}
+
+		}
+	} else {
+		return errors.WithStack(err), 0, nil
+
 	}
 }

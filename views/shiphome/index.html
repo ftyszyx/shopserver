@@ -1,0 +1,264 @@
+
+<script type="text/javascript" src="/static/js/jquery.SuperSlide.2.1.1.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/style/flexslider.css">
+<script type="text/javascript" src="/static/js/jquery.flexslider.js"></script>
+<div class="banner">
+	<div class="banner-bd">
+		<div class="banner-list" style="background:url(/static/images/banner2.jpg) no-repeat center; background-size:cover;">
+			<div class="banner-pic">
+				<div class="plane"><img src="/static/images/plane.png" /></div>
+				<div class="cloud cloud-01"><img src="/static/images/cloud_01.png" /></div>
+				<div class="cloud cloud-02"><img src="/static/images/cloud_02.png" /></div>
+				<div class="cloud cloud-03"><img src="/static/images/cloud_03.png" /></div>
+				<div class="cloud cloud-04"><img src="/static/images/cloud_04.png" /></div>
+				<div class="cloud cloud-05"><img src="/static/images/cloud_01.png" /></div>
+				<div class="cloud cloud-06"><img src="/static/images/cloud_02.png" /></div>
+				<div class="cloud cloud-07"><img src="/static/images/cloud_03.png" /></div>
+				<div class="cloud cloud-08"><img src="/static/images/cloud_04.png" /></div>
+			</div>
+			<div class="wrap clearfix">
+				<div class="banner-txt">
+					<div class="banner-txt-list">
+						<div class="txt">
+							<div class="txt-01">
+								<p class="p-01">澳邦国际物流</p>
+								<p class="p-02">AUSBOND</p>
+								<p class="p-02">EXPRESS</p>
+							</div>
+							<div class="line1"></div>
+							<div class="txt-02">
+								<p class="p-04">我们为您提供</p>
+								<p class="p-05">更高质的全球速递业务</p>
+							</div>
+							<div class="icon">
+								<i class="icon-01 iconfont icon-angledown"></i>
+								<i class="icon-02 iconfont icon-angledown"></i>
+							</div>
+							<div class="more"><a href="javascript:;" onclick="setLocation('#ic', 500);">LEARN MORE</a></div>
+						</div>
+						<div class="cont clearfix">
+							<h2>01</h2>
+							<p>WE PROVIDE YOU</p>
+							<p>MORE HIGH-QUALITY GLOBAL COURIER SERVICE</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="banner-form">
+		<div class="form1">
+			<div>
+				<textarea id="textarea" name="cno" placeholder="填入运单号"></textarea>
+				<!-- <input type="hidden" name="tid" value="3" /> -->
+				<button type="submit" onclick="gototrack()">包裹追踪</button>
+			</div>
+		</div>
+	</div>
+	<script>
+		function gototrack() {
+			var url = '/track/' + $('#textarea').val()
+			console.log("url", url)
+			window.location.href = url
+
+		}
+	</script>
+
+</div>
+
+<!-- 内容 -->
+<div class="container" id="container">
+	<a name="ic"></a>
+	<div class="function bgGray">
+		<div class="wrap clearfix">
+
+			<div class="function-list clearfix">
+				<a href="/uploadinfo" target="_blank">
+					<div class="icon tranAll"><img src="/static/images/function_ico_02.png" /></div>
+					<div class="txt">
+						<span><em>身份证上传</em></span>
+						<p>ID PHOTO UPLOAD</p>
+					</div>
+				</a>
+			</div>
+			<div class="function-list clearfix">
+				<a href="/track">
+					<div class="icon tranAll"><img src="/static/images/function_ico_03.png" /></div>
+					<div class="txt">
+						<span><em>包裹追踪</em></span>
+						<p>Parcel Tracking</p>
+					</div>
+				</a>
+			</div>
+			<!-- <div class="miniPhone miniPhone-netsearch">
+				<a href=""><i class="fa fa-map-marker"></i>网点查询</a>
+			</div> -->
+		</div>
+	</div>
+	<div class="news">
+		<div class="wrap clearfix">
+			<div class="hd clearfix">
+				<h2 class="clearfix"><i class="ico-01"></i><i class="ico-02"></i><span>新闻</span></h2>
+				<p>NEWS BULLETIN</p>
+			</div>
+			<div class="bd clearfix">
+				<div class="slide newsSlide">
+					<ul class="slide-bd slides">
+						{{range $index,$item:=.news}}
+						<li class="pic-txt">
+							<div class="pic"><a href="/new/{{.id}}">
+									<img src='{{.pic}}' border='0' width='523' height='323' alt='{{.title}}'></a></div>
+							<div class="txt">
+								<p>{{.title}}</p>
+							</div>
+						</li>
+						{{end}}
+
+					</ul>
+				</div>
+				<script>
+					$('.newsSlide').flexslider({
+						prevText: '<i class="prev iconfont icon-angle-left" style="font-size:36px;"></i>',
+						nextText: '<i class="next iconfont icon-angle-right" style="font-size:36px;"></i>'
+					});
+				</script>
+				<div class="news-list">
+					{{range $index,$item:=.news}}
+					<dl class="clearfix">
+						<dt>
+							<p><b>{{formatTimestamp .build_time "m"}}</b><em> / {{formatTimestamp .build_time "d"}}</em></p>
+							<span>{{formatTimestamp .build_time "Y"}}</span>
+						</dt>
+						<dd>
+							<h2><a href="/new/{{.id}}">{{.title}}</a></h2>
+							<p>{{.summary}}</p>
+						</dd>
+					</dl>
+					{{end}}
+				</div>
+			</div>
+			<div class="clearfix"></div>
+			<div class="moreBtn"><a href="/newslist/1">MORE+</a></div>
+		</div>
+	</div>
+	<div class="responsibility">
+		<div class="wrap">
+			<div class="bd">
+				<p>RESPONSIBILITY</p>
+			</div>
+		</div>
+	</div>
+	<div class="customers grayWhite" id="business">
+		<!--这里的图片的高度一定要够高，起码要跟第一副图一样高-->
+		<div class="wrap">
+			<div class="hd clearfix">
+				<h2 class="clearfix"><i class="ico-01"></i><i class="ico-02"></i><span>商业客户</span></h2>
+				<p>BUSINESS CUSTOMERS</p>
+			</div>
+			<div class="bd clearfix">
+				<div class="pic-txt">
+					<div class="pic"><span><img src="/static/images/p_02.jpg" /></span></div>
+					<div class="txt">
+						<div class="center">
+							<em>-01-</em>
+							<h2>仓储转运服务</h2>
+							<span>STORAGE & TRANSPORT <br />SERVICE</span>
+						</div>
+					</div>
+				</div>
+				<div class="pic-txt">
+					<div class="txt">
+						<div class="center">
+							<em>-02-</em>
+							<h2>个性化服务</h2>
+							<span>PERSONALIZED SERVICE</span>
+						</div>
+					</div>
+					<div class="pic"><span><img src="/static/images/p_03.jpg" /></span></div>
+				</div>
+				<div class="pic-txt">
+					<div class="pic"><span><img src="/static/images/p_04.jpg" /></span></div>
+					<div class="txt">
+						<div class="center">
+							<em>-03-</em>
+							<h2>澳洲本地公司</h2>
+							<span>THE AUSTRALIAN LOCAL <br />COMPANY</span>
+						</div>
+					</div>
+				</div>
+				<div class="pic-txt">
+					<div class="txt">
+						<div class="center">
+							<em>-04-</em>
+							<h2>选择我们的理由</h2>
+							<span>THE REASONS FOR <br />CHOOSING US</span>
+						</div>
+					</div>
+					<div class="pic"><span><img src="/static/images/p_05.jpg" /></span></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<!-- banner脚本 -->
+<script>
+	$('#textarea').bind({
+		input: function () {
+			this.style.height = this.scrollHeight + 'px';
+		},
+		propertychange: function () {
+			this.style.height = this.scrollHeight + 'px';
+		}
+	});
+</script>
+
+<script type="text/javascript">
+	var imgLength = $('.banner').find('.banner-pic img').length;
+	var num = 0;
+	var i = 0;
+	for (i = 1; i <= imgLength; i++) {
+		$('.banner').find('.banner-pic div').each(function () {
+			if ($(this).find('img')[0].complete) {
+				num = num + 1;
+				if (imgLength == num) {
+					$('.banner').addClass('animateBanner');
+				}
+			} else {
+				$(this).find('img')[0].onload = function () {
+					num = num + 1;
+					if (imgLength == num) {
+						$('.banner').addClass('animateBanner');
+					}
+				}
+			}
+		});
+	}
+
+	$('.banner').slide({
+		mainCell: '.banner-txt',
+		autoPlay: true,
+		effect: 'fold',
+		interTime: 3000,
+		delayTime: 1000,
+		easing: 'swing'
+	});
+</script>
+
+<script>
+	function setLocation(hash) {
+			var tm = arguments[1] ? arguments[1] : 200;
+			if (hash.substring(0, 1) == '#') hash = hash.substring(1); 
+			else {
+				var arr = hash.split('#');
+				hash = arr[1];
+			}
+			if ( hash != '' ) {
+				var obj = $('a[name="'+ hash +'"]');
+				if ( obj.length > 0 ) {
+					$('html,body').animate({ 'scrollTop': obj.offset().top - $('.header').height() }, tm);
+				}
+			}
+		}
+</script>

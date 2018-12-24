@@ -54,9 +54,11 @@ func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error
 	}
 	if err != nil {
 		con += " - " + err.Error()
+
 	}
 	// DebugLog.Println(con)
 	logs.Info(con)
+
 }
 
 // statement query logger struct.

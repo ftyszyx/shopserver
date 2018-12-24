@@ -53,6 +53,7 @@ func (js *Js) GetConfig(uri string) (config *Config, err error) {
 	timestamp := util.GetCurrTs()
 	str := fmt.Sprintf("jsapi_ticket=%s&noncestr=%s&timestamp=%d&url=%s", ticketStr, nonceStr, timestamp, uri)
 	sigStr := util.Signature(str)
+	//logs.Info("ticket:%s sigstr:%s url:%s time:%s nonceStr:%s", ticketStr, sigStr, uri, timestamp, nonceStr)
 
 	config.AppID = js.AppID
 	config.NonceStr = nonceStr

@@ -1,0 +1,234 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=1">
+    <title>澳邦国际物流</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/style/css20181211.css">
+    <link rel="stylesheet" type="text/css" href="/static/fonts/iconfont.css">
+    <link rel="shortcut icon" href="/static/images/logo2.png">
+    <script type="text/javascript" src="/static/js/jquery-1.8.2.min.js"></script>
+
+</head>
+
+<body style="padding-top: 40px;">
+      <!-- 左边浮窗 -->
+      <div class="floatContact" style="display: block;">
+        <div class="bd">
+            <div class="title">
+                <i class="iconfont icon-minus"></i>
+                <p>SHORTCUT</p>
+            </div>
+            <div class="menuContact">
+                <div class="fc-ico-01"><i class="fc-ico"></i>快速联系<i class="tranAll iconfont icon-angledown"></i></div>
+                <dl>
+                    <dt class="fc-ico-02">
+                        <div id="onlineQQ">
+                            <i class="fc-ico"></i>
+                            <span>在线客服</span>
+                            <dl class="pic">
+                                <dd><a target="_blank" class="clearfix" href="http://wpa.qq.com/msgrd?v=3&amp;uin=1624436739&amp;site=qq&amp;menu=yes">
+                                        <i class="fa fa-qq"></i>
+                                        <span>悉尼在线客服</span>
+                                        <em>在线</em>
+                                    </a></dd>
+                                <dd><a target="_blank" class="clearfix" href="http://wpa.qq.com/msgrd?v=3&amp;uin=1624436739&amp;site=qq&amp;menu=yes">
+                                        <i class="fa fa-qq"></i>
+                                        <span>墨尔本在线客服</span>
+                                        <em>在线</em>
+                                    </a></dd>
+                            </dl>
+                           
+                        </div>
+                    </dt>
+                   
+
+                    <dt class="fc-ico-05"><a href="/uploadinfo"><i class="fc-ico"></i><span>身份证上传</span></a></dt>
+                    <!-- <dt class="fc-ico-06"><a href="/plus/list.php?tid=7"><i class="fc-ico"></i><span>活动新闻</span></a></dt>  -->
+                </dl>
+            </div>
+            <div class="backTop"><span><i></i>返回顶部</span></div>
+        </div>
+    </div>
+
+    <div class="phone phone-header">
+        <div class="phone-location">AUS</div>
+        <span class="phone barIcon2">
+            <span class="l show"><i class="iconfont icon-navicon"></i></span>
+        </span>
+    </div>
+    <div class="phone phone-nav phoneBd">
+        <h2>MENU</h2>
+        <ul class="clearfix">
+            <li><a href="/" class="current">首　页<i class="fa fa-chevron-right"></i></a></li>
+            <li><a href="/service">产品与服务<i class="fa fa-chevron-right"></i></a></li>
+            <li><a href="/uploadinfo">身份证上传<i class="fa fa-chevron-right"></i></a></li>
+            <li><a href="/track">包裹追踪<i class="fa fa-chevron-right"></i></a></li>
+            <li><a href="/about">关于AUS<i class="fa fa-chevron-right"></i></a></li>
+
+        </ul>
+    </div>
+    <div class="header">
+        <div class="topArea clearfix">
+            <div class="wrap clearfix">
+                <div class="logo"><a href="/"><img src="/static/images/logo.png"></a></div>
+                <span class="pad barIcon">
+                    <i class="fa fa-navicon on"></i></span>
+                <div class="userBar padBd" style="display: block;">
+                    <div class="nav padBd" style="display: block;">
+                        <ul class="clearfix">
+                            <li><a href="/">首　页</a></li>
+                            <li><a href="/service">产品与服务</a></li>
+                            <li><a href="/track/">包裹追踪</a></li>
+                            <li><a href="/about/">关于我们</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(function () {
+
+            $('.header .barIcon').find('i').each(function (index) {
+                var _this = $(this);
+                _this.click(function () {
+                    _this.addClass('on').siblings().removeClass('on');
+                    $('.header .padBd').eq(index).show().siblings('.padBd').hide();
+                });
+            });
+
+            var _this2;
+            var _this3;
+            $('.barIcon2').find('span').eq(1).click(function () {
+                _this2 = $(this);
+                if (_this2.hasClass("show")) {
+                    _this2.removeClass('show');
+                    $('.phoneBd').eq(1).addClass('show');
+                    $('body, .phone-header').addClass('moveL');
+                } else {
+                    _this2.addClass('show');
+                    $('.phoneBd').eq(1).removeClass('show');
+                    $('body, .phone-header').removeClass('moveL');
+                }
+            });
+            $('.barIcon2').find('span').eq(0).click(function () {
+                // doLogin(1);
+                _this3 = $(this);
+                if (_this3.hasClass("show")) {
+                    _this3.removeClass('show');
+                    $('.phoneBd').eq(0).addClass('show');
+                    $('body, .phone-header').addClass('moveR');
+                } else {
+                    _this3.addClass('show');
+                    $('.phoneBd').eq(0).removeClass('show');
+                    $('body, .phone-header').removeClass('moveR');
+                }
+            });
+
+            function barIcon() {
+                $('.header .barIcon').find('i').eq(0).removeClass('on').siblings().addClass('on');
+                $('.header .padBd').show().eq(0).hide();
+            }
+            barIcon();
+
+            function barIcon2() {
+                $('.barIcon2').find('span').eq(0).addClass('show')
+                $('.barIcon2').find('span').eq(1).addClass('show')
+                $('.phoneBd ').removeClass('show');
+                $('body, .phone-header').removeClass('moveR');
+                $('body, .phone-header').removeClass('moveL');
+            }
+            barIcon2();
+
+            if ($(window).width() <= 1250 && $(window).width() >= 960) {
+                barIcon();
+            } else if ($(window).width() < 960) {
+                barIcon2();
+            } else if ($(window).width() > 1250) {
+                $('.header .barIcon').find('i').addClass('on');
+                $('.header .padBd').show();
+            }
+            if ($(window).width() > 960) {
+                $('.phoneBd ').removeClass('show');
+            }
+            $(window).resize(function () {
+                if ($(window).width() <= 1250 && $(window).width() >= 960) {
+                    barIcon();
+                } else if ($(window).width() < 960) {
+                    barIcon2();
+                } else if ($(window).width() > 1250) {
+                    $('.header .barIcon').find('i').addClass('on');
+                    $('.header .padBd').show();
+                }
+                if ($(window).width() > 960) {
+                    $('.phoneBd ').removeClass('show');
+                }
+            });
+        });
+    </script>
+    <!-- 内容 -->
+    {{.LayoutContent}}
+    <!-- 底部 -->
+    <div class="footer bgMazarine">
+        <div class="footer-01">
+            <div class="wrap">
+                <div class="ft-aArea clearfix">
+                    <div class="clear"></div>
+                    <div class="ft-bArea clearfix">
+                        <div class="ft-logo"><a href="/"><img src="/static/images/logo2.png"></a></div>
+                        <div class="ft-nav clearfix">
+                            <div class="clearfix">
+                                <a href="/">SITEMAP</a>
+                                <em>|</em>
+                                <a href="/">TERMS &amp; CONDITIONS</a>
+                                <em>|</em>
+                                <a href="/">PRIVACY POLICY</a>
+                                <em>|</em>
+                                <a href="/">HELP</a>
+                            </div>
+                            <div class="copyright">
+                                <p>
+                                    <a href="http://m.kuaidi100.com" target="_blank">快递查询</a></p>
+                                <p>Design by: <a href="/" target="_blank">LEGEND WEB DESIGN</a></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var flag = true;
+        console.log("set true")
+        $("#onlineQQ dd").find('a').addClass('on').find('em').html('在线');
+        if(flag){
+            $('.floatContact').show();
+        }
+        
+        $('.icon-minus').click(function(){
+            $('.floatContact').animate({left: '-168px'}, 500, null, function(){
+                $('.floatContact').hide();
+            });
+             flag = false;
+        });
+        $('.floatContact').find('.backTop').click(function(){
+            $(window).scrollTop(0);
+        });
+        $('.floatContact').find('.menuContact h2').click(function(){
+            if( $(this).next().is(":hidden") ){
+                $(this).removeClass('cur');
+                $(this).next().slideDown('fast');
+            }else{
+                $(this).addClass('cur');
+                $(this).next().slideUp('fast');
+            }
+        });
+    </script>
+</body>
+
+</html>

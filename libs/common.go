@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 )
 
 //获取token
@@ -45,6 +46,10 @@ func AjaxReturn(self *beego.Controller, code int, msg interface{}, data interfac
 	out := make(map[string]interface{})
 	if msg != nil {
 		out["message"] = msg.(string)
+	}
+	if code == ErrorCode {
+		logs.Error("err:%s", msg)
+		// logs.Error("err:%s\n statck:\n %s", msg, string(debug.Stack()))
 	}
 	out["code"] = code
 	out["data"] = data
@@ -136,4 +141,13 @@ func ClearMapByStructTag(data map[string]interface{}, in interface{}, tag string
 
 func ClearMapByStruct(data map[string]interface{}, in interface{}) map[string]interface{} {
 	return ClearMapByStructTag(data, in, "")
+}
+
+func SliceIndex(itemlist []string, callback func(item string) bool) int {
+	for i := 0; i < len(itemlist); i++ {
+		if callback(itemlist[i]) {
+			return i
+		}
+	}
+	return -1
 }

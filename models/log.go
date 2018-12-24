@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 
-	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type Log struct {
@@ -11,11 +11,11 @@ type Log struct {
 }
 
 //LEFT JOIN `aq_sys_user` `check_user` ON `sell`.`check_user`=`check_user`.`id`
-func (self *Log) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *Log) InitSqlField(sql db.SqlType) db.SqlType {
 	return self.InitField(self.InitJoinString(sql, true))
 }
 
-func (self *Log) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType {
+func (self *Log) InitJoinString(sql db.SqlType, allfield bool) db.SqlType {
 	moduleTableName := GetModel(MODULE).TableName()
 	userTablename := GetModel(USER).TableName()
 
@@ -31,10 +31,11 @@ func (self *Log) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType {
 	return sql.Alias("log").Join(fieldstr)
 }
 
-func (self *Log) InitField(sql libs.SqlType) libs.SqlType {
+func (self *Log) InitField(sql db.SqlType) db.SqlType {
 	return sql.Field(map[string]string{
 		"user.name":   "user_name",
 		"module.name": "module_name",
+		"module.id":   "module_id",
 		"log.time":    "time",
 		"log.link":    "link",
 		"log.info":    "info",

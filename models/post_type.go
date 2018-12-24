@@ -1,8 +1,6 @@
 package models
 
-import (
-	"github.com/zyx/shop_server/libs"
-)
+import "github.com/zyx/shop_server/libs/db"
 
 type PostType struct {
 	Model
@@ -15,7 +13,7 @@ type PostTypeData struct {
 }
 
 //LEFT JOIN `aq_sys_user` `check_user` ON `sell`.`check_user`=`check_user`.`id`
-func (self *PostType) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *PostType) InitSqlField(sql db.SqlType) db.SqlType {
 	return sql
 }
 

@@ -1,6 +1,6 @@
 package models
 
-import "github.com/zyx/shop_server/libs"
+import "github.com/zyx/shop_server/libs/db"
 
 type ShopBrand struct {
 	Model
@@ -12,7 +12,7 @@ type ShopBrandData struct {
 	Pic      string
 }
 
-func (self *ShopBrand) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *ShopBrand) InitSqlField(sql db.SqlType) db.SqlType {
 	return sql
 }
 

@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/pkg/errors"
+	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/baiduai"
 
 	"github.com/astaxie/beego"
 )
@@ -69,8 +72,46 @@ func (self *UploadController) PicUpload() {
 		err = os.Remove(fileinfo["filePath"].(string))
 		self.AjaxReturnSuccess("", fileinfo)
 	} else {
-		logs.Info("error:%s", err.Error())
-		self.AjaxReturnError(err.Error())
+		logs.Info("PicUpload error:%s", err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
+	}
+}
+
+//上传身份证
+func (self *UploadController) UploadIDNum() {
+	// logs.Info("uploadIDNum")
+	side := self.GetString("side", "")
+	logs.Info("uploadIDNum:%s", side)
+
+	if side != "front" && side != "back" {
+		self.AjaxReturnError(errors.New("格式不对"))
+	}
+	//保存
+	err, fileinfo := self.saveUploadFile()
+	if err != nil {
+		logs.Info("savefile err %+v", err)
+		self.AjaxReturnError(errors.WithStack(err))
+	}
+	logs.Info("save ok")
+	//识别
+	cardres, err := baiduai.GlobalaiIDCarddata.GetIdResByPath(fileinfo["filePath"].(string), side)
+	if err != nil {
+		logs.Info("Globalaidata err %+v", err)
+		self.AjaxReturnError(errors.WithStack(err))
+	}
+
+	bucket := beego.AppConfig.String("qiniu.bucket")
+	_, err = libs.UploadFile(fileinfo["filename"].(string), fileinfo["filePath"].(string), bucket)
+
+	if err == nil {
+		err = os.Remove(fileinfo["filePath"].(string))
+		fileinfo["result"] = cardres.Words_result
+		fileinfo["side"] = side
+		fileinfo["res_num"] = cardres.Words_result_num
+		self.AjaxReturnSuccess("", fileinfo)
+	} else {
+		logs.Info("PicUpload error:%+v", err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 }
 

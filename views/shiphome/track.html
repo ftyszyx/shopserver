@@ -1,0 +1,221 @@
+<script type="text/javascript" src="/static/js/date_format.js"></script>
+<div class="banner2">
+	<div class="banner-bd">
+		<img src="/static/images/banner_track.jpg" /></div>
+	<div class="banner-hd">
+		<div class="wrap clearfix">
+			<div class="colPicTit">
+				<h2>
+					包裹追踪</h2>
+				<p>
+					Package tracking</p>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container">
+	<div class="quickNav">
+		<div class="wrap clearfix">
+			<div class="quickNav-list ql1 on">
+				<span>货物追踪</span>
+				<p>
+					TRACKING</p>
+			</div>
+
+		</div>
+	</div>
+	<div class="pageChange">
+		<div class="track-bd pageChange-bd" style="display:block;">
+			<div class="wrap">
+				<div class="track-form">
+					<div class="hd5">
+						<h2>
+							输入订单号 </h2>
+						<p>
+							Order number</p>
+					</div>
+					<div class="form3 clearfix">
+						<form action="" class="clearfix" method="" onSubmit="ko();return false;">
+							<textarea id="textarea" name="title" placeholder="请输入运单号"></textarea>
+							<button type="submit">追踪 / TRACK</button>
+						</form>
+					</div>
+
+
+
+					<script>
+						var logisticsCompany = [{id: 'huitongkuaidi',title: '百世汇通'},
+								{id: 'ems',title: 'EMS'},
+								{id: 'shunfeng',title: '顺丰'},
+								{id: 'tiantian',title: '天天'},
+								{id: 'yuantong',title: '圆通速递'},
+								{id: 'yunda',title: '韵达快运'},
+								{id: 'zhongtong',title: '中通速递'}];
+							$("#show").html("Loading...");
+						var cno = {{.id}};
+						if (cno) {
+							$("#textarea").text(cno)
+							ko();
+						}
+						
+						var getcomapnyname=function(name){
+							for(var i=0;i<logisticsCompany.length;i++){
+								if(logisticsCompany[i].id===name){
+									return logisticsCompany[i].title
+								}
+							}
+							return ""
+						}
+						function ko() {
+							console.log("search");
+							$("#show").empty();
+							$("#show").html("Loading...");
+							var title = $('#textarea').val();
+							title=title.replace(/([\s]+)/g, '').toUpperCase()
+	
+							var curPageUrl = window.document.location.href;
+							var rootPath = curPageUrl.split("//")[0] + '//' + curPageUrl.split("//")[1].split("/")[0]
+							console.log("rootpath", rootPath)
+
+							$.ajax({
+								url: rootPath + "/Logistics/GetLogicsInfo", //百度接口api 鹰眼
+								type: 'POST', //GET
+								contentType: "application/json;charset=utf-8",
+								async: true, //或false,是否异步
+								data: JSON.stringify({
+									id: title
+								}),
+								timeout: 90000, //超时时间
+								dataType: 'json', //返回的数据格式：json/xml/html/script/jsonp/text
+								beforeSend: function (xhr) {
+									console.log(xhr)
+									console.log('发送前')
+								},
+								success: function (res, textStatus, jqXHR) {
+									console.log('res', res)
+
+									var addrow = function (time, text, head) {
+										console.log("add ", time, text)
+										if (!head) {
+											var stylestr = "border:1px solid #DDDDDD;font-size:12px;line-height:22px;padding:3px 5px;"
+										} else {
+											var stylestr =
+												"background:#64AADB;border:1px solid #75C2EF;color:#FFFFFF;font-size:14px;font-weight:bold;height:28px;line-height:28px;text-indent:15px;"
+										}
+										var tr = $("<tr>")
+										var td1 = $("<td>").attr("style", stylestr).attr("width", "100");
+										td1.text(time)
+										var td2 = $("<td>").attr("style", stylestr).attr("width", "300");
+										td2.text(text)
+										tr.append(td1)
+										tr.append(td2)
+										return tr
+									}
+									if (res.code != 1) {
+										console.log("err result");
+										$("#show").empty();
+										$("#show").html(res.message);
+										alert(res.message)
+									} else {
+										console.log("ok");
+										// //AB62171230AU
+										var table = $(
+											'<table id="showtablecontext" style="border-collapse:collapse;border-spacing:0;" width="520px" cellspacing="0" cellpadding="0" border="0">'
+										)
+										var tbody = $("<tbody>")
+										table.append(tbody)
+										if (res.data.length == 0) {
+											console.log("no result");
+											$("#show").empty();
+											$("#show").html("还没有进度");
+										} else {
+											console.log("get result");
+											$("#show").empty();
+											var pre = $("<div>").attr("class", "bd clearfix")
+											pre.append($("<p>").html("感谢您使用澳邦国际物流的服务。"))
+											pre.append($("<p>").append($("<br/>")))
+											pre.append($("<p>").html("运 单  号： " + res.data.idinfo.id))
+											pre.append($("<p>").html("出 发  地：悉尼 "))
+											pre.append($("<p>").html("目 的  地：中国 "))
+											pre.append($("<p>").html("件数：1 "))
+											if(res.data.idinfo.company){
+												pre.append($("<p>").html("转 运 单  号： " + getcomapnyname(res.data.idinfo.company)+"     "+res.data.idinfo.shipnum))
+											}
+											
+											$("#show").append(pre)
+											tbody.append(addrow("时间", "地点和跟踪进度", true))
+											var datalist = res.data.data;
+											if(datalist){
+												for (var i = 0; i < datalist.length; i++) {
+													var time = datalist[i].time
+													if (time) {
+														var date = window.fecha.parse(time, 'yyyy-MM-dd HH:mm:ss', false);
+														timestr = window.fecha.format(date, 'yyyy-MM-dd HH:mm', false);
+														tbody.append(addrow(timestr, datalist[i].context))
+													} else {
+														tbody.append(addrow("", datalist[i].context))
+													}
+
+													}
+											}
+											console.log("table", table, table.prop("outerHTML"))
+											$("#show").append(table)
+										}
+
+									}
+
+								},
+								error: function (xhr, errstatus, err) {
+									console.log('err', errstatus, err)
+								},
+								complete: function (xhr, status) {
+									console.log('complete', xhr, status)
+								}
+							});
+						}
+						$('#textarea').bind({
+							input: function () {
+								this.style.height = this.scrollHeight + 'px';
+							},
+							propertychange: function () {
+								this.style.height = this.scrollHeight + 'px';
+							}
+						});
+					</script>
+				</div>
+				<a name="track-results"></a>
+				<div class="track-results">
+					<div class="hd6">
+						<h2>追踪结果</h2>
+						<p>TRACK RESULTS</p>
+					</div>
+
+
+					<div id="show">
+						<!--显示物流信息的-->
+
+					</div>
+
+				</div>
+			</div>
+		</div>
+		<div class="track-bd pageChange-bd">
+			 </div>
+
+	</div>
+	<script>
+		/*$('.quickNav').find('.quickNav-list').eq(0).addClass('on');
+		$('.pageChange').find('.pageChange-bd').hide().eq(0).show();*/
+		$('.quickNav').find('.quickNav-list').each(function (index) {
+			$(this).click(function () {
+				$(this).addClass('on').siblings().removeClass('on');
+				$('.pageChange').find('.pageChange-bd').hide().eq(index).show();
+				if (index == 2 && !$(this).hasClass('map_reset')) {
+					bigMap = new google.maps.Map(document.getElementById('mapContainer'), myOptions);
+					bigMap.setCenter(markerLocation);
+					$(this).addClass('map_reset');
+				}
+			});
+		});
+	</script>
+</div>

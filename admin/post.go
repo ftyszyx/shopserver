@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/astaxie/beego/orm"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type PostController struct {
 	BaseController
 }
 
-func (self *PostController) BeforeSql(data map[string]interface{}) {
+func (self *PostController) BeforeSql(data map[string]interface{}) error {
 	if self.method == "Abandon" {
 		data["is_del"] = self.postdata["is_del"]
 	} else if self.method == "Add" {
@@ -19,8 +19,9 @@ func (self *PostController) BeforeSql(data map[string]interface{}) {
 		data["build_user"] = self.GetUid()
 		data["build_time"] = time.Now().Unix()
 	}
+	return nil
 }
-func (self *PostController) AfterSql(data map[string]interface{}, oldinfo orm.Params) {
+func (self *PostController) AfterSql(data map[string]interface{}, oldinfo db.Params) error {
 	if self.method == "Add" {
 		self.AddLog(fmt.Sprintf("增加文章:%+v", data))
 	} else if self.method == "Edit" {
@@ -31,24 +32,23 @@ func (self *PostController) AfterSql(data map[string]interface{}, oldinfo orm.Pa
 	} else if self.method == "Abandon" {
 		name := data["title"]
 		self.AddLog(fmt.Sprintf("废弃:%s", name))
-	} else {
-		self.AddLog(fmt.Sprintf("%+v", data))
 	}
+	return nil
 }
 
 //废弃
 func (self *PostController) Abandon() {
-	self.EditCommon(self)
+	self.EditCommonAndReturn(self)
 }
 
 func (self *PostController) Add() {
-	self.AddCommon(self)
+	self.AddCommonAndReturn(self)
 }
 
 func (self *PostController) Edit() {
-	self.EditCommon(self)
+	self.EditCommonAndReturn(self)
 }
 
 func (self *PostController) Del() {
-	self.DelCommon(self)
+	self.DelCommonAndReturn(self)
 }

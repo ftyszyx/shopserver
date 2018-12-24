@@ -2,7 +2,7 @@ package admin
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
+	"github.com/zyx/shop_server/libs/db"
 	"github.com/zyx/shop_server/models"
 )
 
@@ -31,20 +31,22 @@ func (self *HomeControl) setdata() {
 	senddata["news"] = models.AdsHomeCache.Get("news")
 	senddata["product1"] = models.AdsHomeCache.Get("product1")
 	if senddata["product1"] != nil {
-		arr := senddata["product1"].([]orm.Params)
+		arr := senddata["product1"].([]db.Params)
 		senddata["productname1"] = arr[0]["ads_pos_title"]
 	}
 
 	senddata["product2"] = models.AdsHomeCache.Get("product2")
 	if senddata["product2"] != nil {
-		arr := senddata["product2"].([]orm.Params)
+		arr := senddata["product2"].([]db.Params)
 		senddata["productname2"] = arr[0]["ads_pos_title"]
 	}
 	senddata["about"] = models.AdsHomeCache.Get("about")
 	senddata["contact"] = models.AdsHomeCache.Get("contact")
 	senddata["joinus"] = models.AdsHomeCache.Get("joinus")
 
+	// logs.Info("sendata:%#v", senddata)
 	self.Data["data"] = senddata
+
 }
 
 //首页
@@ -71,9 +73,10 @@ func (self *HomeControl) Products() {
 //文章
 func (self *HomeControl) Post() {
 	self.setdata()
+	dboper := db.NewOper()
 	postid := self.Ctx.Input.Param(":id")
 	postmodel := models.GetModel(models.POST)
-	postinfo := postmodel.GetInfoById(postid)
+	postinfo := postmodel.GetInfoById(dboper, postid)
 	if postinfo != nil {
 		self.Data["postinfo"] = postinfo
 	}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
+	"github.com/pkg/errors"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
 )
@@ -59,7 +60,7 @@ func UploadFile(key string, localfile string, bucket string) (storage.PutRet, er
 		},
 	}
 	err := formUploader.PutFile(context.Background(), &ret, upToken, key, localfile, &putExtra)
-	return ret, err
+	return ret, errors.WithStack(err)
 }
 
 func getPrivateRrl(domain string, key string) string {

@@ -3,11 +3,12 @@ package libs
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/astaxie/beego/logs"
 

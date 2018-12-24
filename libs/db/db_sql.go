@@ -1,4 +1,4 @@
-package libs
+package db
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ LEFT JOIN `aq_store_item` `store_item` ON `sell`.`store_id`=store_item.store_id 
 WHERE  `sell`.`id` = 'saas'  AND ( `pay_time` > 1525276800 and `pay_time` < 1528214400 )  AND `item`.`short_name` LIKE '%dsafd%'
 ORDER BY `item_sort_id`  asc LIMIT 0,50
 */
-
+//生成sql语句
 type SqlType interface {
 	getSql() string
 	Select() string
@@ -49,6 +49,7 @@ type SqlType interface {
 	GetAlias() string
 
 	NeedJointable(tablename string) bool
+	HaveField(fieldName string) bool
 }
 
 type SqlBuild struct {
@@ -83,6 +84,30 @@ func (self *SqlBuild) NeedJointable(tablename string) bool {
 		strarr := strings.Split(key, ".")
 		if len(strarr) > 1 && strarr[0] == tablename {
 			return true
+		}
+	}
+	return false
+}
+
+func (self *SqlBuild) HaveField(fieldName string) bool {
+	for key, _ := range self.where {
+		strarr := strings.Split(key, ".")
+		if len(strarr) > 1 && strarr[1] == fieldName {
+			return true
+		} else {
+			if key == fieldName {
+				return true
+			}
+		}
+	}
+	for key, _ := range self.order {
+		strarr := strings.Split(key, ".")
+		if len(strarr) > 1 && strarr[1] == fieldName {
+			return true
+		} else {
+			if key == fieldName {
+				return true
+			}
 		}
 	}
 	return false
@@ -126,7 +151,7 @@ func (self *SqlBuild) getSql() string {
 		}
 	}
 	if self.getType == "count" {
-		countfield := "count(*) as " + SQL_COUNT_NAME
+		countfield := "count(*) as " + SQLTotalName
 		return strings.TrimSpace(fmt.Sprintf("select %s from `%s` %s %s %s ", countfield, self.TableName, tableAlias, self.joinStr, whereStr))
 	} else if self.getType == "select" || self.getType == "find" {
 		return strings.TrimSpace(fmt.Sprintf("select %s from `%s` %s %s %s %s %s", fieldStr, self.TableName, tableAlias, self.joinStr, whereStr, orderStr, limitStr))
@@ -240,8 +265,17 @@ func SqlGetString(value interface{}) string {
 	// logs.Info("type:%s", reflect.TypeOf(value))
 	// logs.Info("value:%v", value)
 
+	if value == nil {
+		//return "NULL"
+		return "''"
+	}
+
 	if temp, ok := value.(string); ok {
-		return "'" + SqlEscap(temp) + "'"
+		if value == "" {
+			//return "NULL"
+			return "''"
+		}
+		return "'" + strings.TrimSpace(SqlEscap(temp)) + "'"
 	} else {
 		return "'" + fmt.Sprintf("%v", value) + "'"
 	}

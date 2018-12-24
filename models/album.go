@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 
-	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type Album struct {
@@ -15,11 +15,11 @@ type AlbumData struct {
 	Order_id int
 }
 
-func (self *Album) InitSqlField(sql libs.SqlType) libs.SqlType {
+func (self *Album) InitSqlField(sql db.SqlType) db.SqlType {
 	return self.InitField(self.InitJoinString(sql, true))
 }
 
-func (self *Album) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType {
+func (self *Album) InitJoinString(sql db.SqlType, allfield bool) db.SqlType {
 	photoTableName := GetModel(PHOTO).TableName()
 
 	fieldstr := ""
@@ -29,7 +29,7 @@ func (self *Album) InitJoinString(sql libs.SqlType, allfield bool) libs.SqlType 
 	}
 	return sql.Alias("album").Join(fieldstr)
 }
-func (self *Album) InitField(sql libs.SqlType) libs.SqlType {
+func (self *Album) InitField(sql db.SqlType) db.SqlType {
 	return sql.Field(map[string]string{
 		"photo.path":      "cover_pic_path",
 		"album.id":        "id",

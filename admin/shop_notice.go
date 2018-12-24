@@ -1,17 +1,23 @@
 package admin
 
+import "github.com/zyx/shop_server/libs/db"
+
 type ShopNoticeController struct {
 	BaseController
 }
 
+func (self *ShopNoticeController) AfterSql(data map[string]interface{}, oldinfo db.Params) error {
+	self.logcommon(data, oldinfo)
+	return nil
+}
 func (self *ShopNoticeController) Add() {
-	self.AddCommon(self)
+	self.AddCommonAndReturn(self)
 }
 
 func (self *ShopNoticeController) Edit() {
-	self.EditCommon(self)
+	self.EditCommonAndReturn(self)
 }
 
 func (self *ShopNoticeController) Del() {
-	self.DelCommon(self)
+	self.DelCommonAndReturn(self)
 }

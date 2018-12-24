@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
+	"github.com/pkg/errors"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
 	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 	"github.com/zyx/shop_server/models"
 	"github.com/zyx/shop_server/wechat"
 )
@@ -22,7 +23,7 @@ type LoginController struct {
 }
 
 //登录成功
-func (self *LoginController) loginSucesss(userinfo orm.Params, changeinfo map[string]interface{}, noreturn bool) {
+func (self *LoginController) loginSucesss(userinfo db.Params, changeinfo map[string]interface{}, noreturn bool) {
 	logs.Info("login ok")
 	userModel := models.GetModel(models.USER)
 	userGroupModel := models.GetModel(models.USERGROUP)
@@ -44,39 +45,39 @@ func (self *LoginController) loginSucesss(userinfo orm.Params, changeinfo map[st
 		changeinfo["user_token"] = userinfo["user_token"]
 		senddata["token"] = userinfo["user_token"]
 	}
-	groupinfo := userGroupModel.GetInfoAndCache(userinfo["user_group"].(string), false)
+	groupinfo := userGroupModel.GetInfoAndCache(self.dboper, userinfo["user_group"].(string), false)
 	expiretime, err := strconv.Atoi(groupinfo["expire_time"].(string))
 	if err != nil {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 	changeinfo["token_expire"] = curtime + int64(expiretime)
 	changeinfo["last_login_time"] = logintime
 
 	senddata["uid"] = id
-	o := orm.NewOrm()
-	_, err = o.Raw(fmt.Sprintf(`update  %s set %s  where id=?`, userModel.TableName(), libs.SqlGetKeyValue(changeinfo, "=")), id).Exec()
+	_, err = self.dboper.Raw(fmt.Sprintf(`update  %s set %s  where id=?`, userModel.TableName(), db.SqlGetKeyValue(changeinfo, "=")), id).Exec()
 	if err == nil {
-		userModel.GetInfoAndCache(id, true) //更新缓存
+		userModel.GetInfoAndCache(self.dboper, id, true) //更新缓存
 		if noreturn == false {
 			self.AjaxReturnSuccess("登录成功", senddata)
 		}
 	} else {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 
 }
 
 //新增用户
-func (self *LoginController) addUser(adddata map[string]interface{}, fieldkey string, fieldvalue string, noreturn bool) orm.Params {
+func (self *LoginController) addUser(adddata map[string]interface{}, fieldkey string, fieldvalue string, noreturn bool) db.Params {
 	logs.Info("add user")
-	var res []orm.Params
+	var res []db.Params
 	userGroupModel := models.GetModel(models.USERGROUP)
 	userModel := models.GetModel(models.USER)
-	o := orm.NewOrm()
+	// o := orm.NewOrm()
+	membergroupid := beego.AppConfig.String("member.groupid")
 
-	num, err := o.Raw(fmt.Sprintf(`select * from %s where group_type=? limit 1`, userGroupModel.TableName()), libs.UserMember).Values(&res)
+	num, err := self.dboper.Raw(fmt.Sprintf(`select * from %s where id=? limit 1`, userGroupModel.TableName()), membergroupid).Values(&res)
 	if err != nil && num == 0 {
-		self.AjaxReturnError("用户组不存在或错误")
+		self.AjaxReturnError(errors.New("用户组不存在或错误"))
 	}
 	groupinfo := res[0]
 	password := string(utils.RandomCreateBytes(13))
@@ -87,20 +88,20 @@ func (self *LoginController) addUser(adddata map[string]interface{}, fieldkey st
 	adddata["token_get_time"] = curtime
 	expiretime, err := strconv.Atoi(groupinfo["expire_time"].(string))
 	if err != nil {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 	adddata["token_expire"] = curtime + int64(expiretime)
 
 	adddata["user_token"] = libs.GetToken(adddata["token_expire"], groupinfo["id"], adddata["password"], adddata["user_group"].(string))
 	adddata["last_login_time"] = curtime
 
-	keys, values := libs.SqlGetInsertInfo(adddata)
-	_, err = o.Raw(fmt.Sprintf("insert into %s (%s) values (%s)", userModel.TableName(), keys, values)).Exec()
+	keys, values := db.SqlGetInsertInfo(adddata)
+	_, err = self.dboper.Raw(fmt.Sprintf("insert into %s (%s) values (%s)", userModel.TableName(), keys, values)).Exec()
 	if err != nil {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 
-	num, err = o.Raw(fmt.Sprintf(`select * from %s where %s=? limit 1`, userModel.TableName(), fieldkey), fieldvalue).Values(&res)
+	num, err = self.dboper.Raw(fmt.Sprintf(`select * from %s where %s=? limit 1`, userModel.TableName(), fieldkey), fieldvalue).Values(&res)
 	if err == nil && num > 0 {
 		// userModel.ClearRowCache(res[0]["id"].(string))
 		if noreturn == false {
@@ -112,7 +113,7 @@ func (self *LoginController) addUser(adddata map[string]interface{}, fieldkey st
 		}
 		return res[0]
 	} else {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 
 	}
 	return nil
@@ -128,25 +129,24 @@ func (self *LoginController) Login() {
 	var data = new(loginPost)
 	json.Unmarshal(self.Ctx.Input.RequestBody, data)
 	logs.Info("login username:%s pass:%s ", data.Username, data.Password)
-	o := orm.NewOrm()
-	var res []orm.Params
+	// o := orm.NewOrm()
+	var res []db.Params
 	passMd5 := libs.GetStrMD5(data.Password)
 	userModel := models.GetModel(models.USER)
-	num, err := o.Raw(fmt.Sprintf(`select * from %s where account=? and password=? limit 1`, userModel.TableName()), data.Username, passMd5).Values(&res)
+	num, err := self.dboper.Raw(fmt.Sprintf(`select * from %s where account=? and password=? limit 1`, userModel.TableName()), data.Username, passMd5).Values(&res)
 	if err == nil && num > 0 {
 		self.loginSucesss(res[0], make(map[string]interface{}), false)
 	}
 	libs.AjaxReturn(&self.Controller, libs.ErrorCode, "账号或密码错误", nil)
-
 }
 
 func (self *LoginController) LoginOut() {
 	logs.Info("loginout")
-	o := orm.NewOrm()
+	// o := orm.NewOrm()
 	userModel := models.GetModel(models.USER)
-	_, err := o.Raw(fmt.Sprintf(`update %s set user_token='%s',token_expire='%d' where id='%s'`, userModel.TableName(), "", 0, self.uid)).Exec()
+	_, err := self.dboper.Raw(fmt.Sprintf(`update %s set user_token='%s',token_expire='%d' where id='%s'`, userModel.TableName(), "", 0, self.uid)).Exec()
 	if err == nil {
-		userModel.GetInfoAndCache(self.uid, true) //更新缓存
+		userModel.GetInfoAndCache(self.dboper, self.uid, true) //更新缓存
 		libs.AjaxReturn(&self.Controller, libs.SuccessCode, "登出成功", nil)
 	}
 
@@ -176,11 +176,11 @@ func (self *LoginController) GetPhoneCode() {
 	var data = new(captchaData)
 	json.Unmarshal(self.Ctx.Input.RequestBody, data)
 	if data.Phone == "" {
-		self.AjaxReturnError("手机号不能为空")
+		self.AjaxReturnError(errors.New("手机号不能为空"))
 	}
 	logs.Info("get code:%+v", data)
 	if models.CaptchaCode.Verify(data.Captcha_id, data.Captcha) == false {
-		self.AjaxReturnError("验证码错误")
+		self.AjaxReturnError(errors.New("验证码错误"))
 	}
 	codestr := string(utils.RandomCreateBytes(6))
 	//发送验证码
@@ -191,7 +191,7 @@ func (self *LoginController) GetPhoneCode() {
 	if err == nil {
 		self.AjaxReturnSuccess("验证码发送成功", nil)
 	}
-	self.AjaxReturnError(err.Error())
+	self.AjaxReturnError(errors.WithStack(err))
 
 }
 
@@ -205,22 +205,22 @@ func (self *LoginController) LoginWithPhone() {
 	var data = new(PhoneLoginData)
 	json.Unmarshal(self.Ctx.Input.RequestBody, data)
 	if data.Phone == "" {
-		self.AjaxReturnError("手机号不能为空")
+		self.AjaxReturnError(errors.New("手机号不能为空"))
 	}
 	if data.Code == "" {
-		self.AjaxReturnError("验证码不能为空")
+		self.AjaxReturnError(errors.New("验证码不能为空"))
 	}
 
 	codestr, ok := models.PhoneCodeCache.Get(data.Phone).(string)
 	logs.Info("get code:%+v getstr:%s", data, codestr)
 	if ok == false || codestr == "" || codestr != data.Code {
-		self.AjaxReturnError("验证码不对")
+		self.AjaxReturnError(errors.New("验证码不对"))
 	}
 
 	userModel := models.GetModel(models.USER)
-	var res []orm.Params
-	o := orm.NewOrm()
-	num, err := o.Raw(fmt.Sprintf(`select * from %s where phone=? limit 1`, userModel.TableName()), data.Phone).Values(&res)
+	var res []db.Params
+	// o := orm.NewOrm()
+	num, err := self.dboper.Raw(fmt.Sprintf(`select * from %s where phone=? limit 1`, userModel.TableName()), data.Phone).Values(&res)
 	if err == nil {
 		//是老用户
 		if num > 0 {
@@ -231,10 +231,11 @@ func (self *LoginController) LoginWithPhone() {
 			adddata := make(map[string]interface{})
 			adddata["phone"] = data.Phone
 			adddata["account"] = data.Phone
+			adddata["name"] = data.Phone
 			self.addUser(adddata, "phone", data.Phone, false)
 		}
 	}
-	self.AjaxReturnError(err.Error())
+	self.AjaxReturnError(errors.WithStack(err))
 
 }
 
@@ -244,7 +245,7 @@ func (self *LoginController) LoginWithWchat() {
 	url, err := wechat.OauthInstance.GetRedirectURL(callbackurl, "snsapi_userinfo", "test")
 	if err != nil {
 		logs.Error(err.Error())
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 	self.AjaxReturnSuccess("", map[string]interface{}{"url": url})
 }
@@ -256,21 +257,20 @@ func (self *LoginController) WchatLoginCallback() {
 	resToken, err := wechat.OauthInstance.GetUserAccessToken(code)
 	if err != nil {
 		logs.Error(err.Error())
-		//self.AjaxReturnError(err.Error())
 		return
 	}
-
+	logs.Info("WchatLoginCallback:%+v", resToken)
 	userInfo, err := wechat.OauthInstance.GetUserInfo(resToken.AccessToken, resToken.OpenID)
 	if err != nil {
 		logs.Error(err.Error())
 		return
 	}
-	logs.Info("userinfo:%v", userInfo)
+	logs.Info("userinfo:%+v", userInfo)
 
 	userModel := models.GetModel(models.USER)
-	var res []orm.Params
-	o := orm.NewOrm()
-	num, err := o.Raw(fmt.Sprintf(`select * from %s where wchat_openid=? limit 1`, userModel.TableName()), userInfo.OpenID).Values(&res)
+	var res []db.Params
+	// o := orm.NewOrm()
+	num, err := self.dboper.Raw(fmt.Sprintf(`select * from %s where wchat_unionid=? limit 1`, userModel.TableName()), userInfo.Unionid).Values(&res)
 	var uid string
 	var token string
 	changedata := make(map[string]interface{})
@@ -284,12 +284,13 @@ func (self *LoginController) WchatLoginCallback() {
 			changedata["sex"] = userInfo.Sex
 			changedata["province"] = userInfo.Province
 			changedata["city"] = userInfo.City
+			// changedata["head"] = userInfo.HeadImgURL
 			self.loginSucesss(res[0], changedata, true)
 			token = changedata["user_token"].(string)
 			uid = res[0]["id"].(string)
 		} else {
 			logs.Info("new user")
-			changedata["account"] = userInfo.OpenID
+			changedata["account"] = userInfo.Unionid
 			changedata["name"] = userInfo.Nickname
 			changedata["country"] = userInfo.Country
 			changedata["sex"] = userInfo.Sex
@@ -299,7 +300,7 @@ func (self *LoginController) WchatLoginCallback() {
 			changedata["wchat_unionid"] = userInfo.Unionid
 			changedata["wchat_openid"] = userInfo.OpenID
 
-			resinfo := self.addUser(changedata, "wchat_openid", userInfo.OpenID, true)
+			resinfo := self.addUser(changedata, "wchat_unionid", userInfo.Unionid, true)
 			uid = resinfo["id"].(string)
 			token = resinfo["user_token"].(string)
 		}
@@ -307,15 +308,6 @@ func (self *LoginController) WchatLoginCallback() {
 		logs.Info("goto new location:%s", newlocation)
 		http.Redirect(self.Ctx.ResponseWriter, self.Ctx.Request, newlocation, 302)
 	} else {
-		self.AjaxReturnError(err.Error())
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 }
-
-// func (self *LoginController) CheckWchatLogin() {
-// 	token := self.Input().Get("token")
-// 	uid := self.Input().Get("uid")
-// 	data := make(map[string]interface{})
-// 	data["token"] = token
-// 	data["uid"] = uid
-// 	self.AjaxReturn(libs.WchatLoginOk, "登录成功", data)
-// }

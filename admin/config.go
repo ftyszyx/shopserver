@@ -3,8 +3,9 @@ package admin
 import (
 	"fmt"
 
-	"github.com/astaxie/beego/orm"
+	"github.com/pkg/errors"
 	"github.com/zyx/shop_server/libs"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 type ConfigController struct {
@@ -12,8 +13,8 @@ type ConfigController struct {
 }
 
 func (self *ConfigController) Edit() {
-	o := orm.NewOrm()
-	err := o.Begin()
+
+	err := self.dboper.Begin()
 
 	modelcheck := self.model.GetModelStruct()
 	changelist := self.postdata["list"].([]interface{})
@@ -21,15 +22,17 @@ func (self *ConfigController) Edit() {
 		mapvalue := value.(map[string]interface{})
 		id := mapvalue["id"].(string)
 		changedata := libs.ClearMapByStruct(mapvalue, modelcheck)
-		_, err = o.Raw(fmt.Sprintf("update %s set %s where `id`=?", self.model.TableName(), libs.SqlGetKeyValue(changedata, "=")), id).Exec()
+		_, err = self.dboper.Raw(fmt.Sprintf("update %s set %s where `id`=?", self.model.TableName(), db.SqlGetKeyValue(changedata, "=")), id).Exec()
 	}
+
 	if err == nil {
-		err = o.Commit()
+		err = self.dboper.Commit()
+		self.AddLog(fmt.Sprintf("postdata:%+v ", self.postdata))
 		self.AjaxReturnSuccess("", nil)
 		return
 	} else {
-		err = o.Rollback()
-		self.AjaxReturnError(err.Error())
+		err = self.dboper.Rollback()
+		self.AjaxReturnError(errors.WithStack(err))
 	}
 
 }

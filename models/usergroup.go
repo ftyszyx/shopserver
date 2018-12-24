@@ -9,6 +9,7 @@ type UserGroupData struct {
 	Module_ids  string
 	expire_time int
 	Group_type  int
+	Limit_show_order	string
 }
 
 func (self *UserGroup) GetModelStruct() interface{} {

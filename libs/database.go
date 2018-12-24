@@ -2,20 +2,21 @@ package libs
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/astaxie/beego/orm"
+	"github.com/pkg/errors"
+	"github.com/zyx/shop_server/libs/db"
 )
 
 var SqlLineEnd = "\r\n"
 
 //获取所有的表
-func GetTableList() ([]orm.Params, error) {
-	var dataList []orm.Params
-	db := orm.NewOrm()
-	_, err := db.Raw("show table status").Values(&dataList)
+func GetTableList(oper db.DBOperIO) ([]db.Params, error) {
+
+	var dataList []db.Params
+	// db := orm.NewOrm()
+	_, err := oper.Raw("show table status").Values(&dataList)
 	if err == nil {
 		return dataList, nil
 	}
@@ -23,12 +24,12 @@ func GetTableList() ([]orm.Params, error) {
 }
 
 //获取表的字符串
-func GetTableString(tablename string) (string, error) {
+func GetTableString(tablename string, oper db.DBOperIO) (string, error) {
 	var buffetstr bytes.Buffer
 	buffetstr.WriteString(fmt.Sprintf("drop table if exists `%s`;%s", tablename, SqlLineEnd))
-	var dataList []orm.Params
-	db := orm.NewOrm()
-	num, err := db.Raw(fmt.Sprintf("show create table %s", tablename)).Values(&dataList)
+	var dataList []db.Params
+	// db := orm.NewOrm()
+	num, err := oper.Raw(fmt.Sprintf("show create table %s", tablename)).Values(&dataList)
 	if err == nil {
 		if num == 0 {
 			return "", errors.New(fmt.Sprintf("%s is empty", tablename))
@@ -40,12 +41,12 @@ func GetTableString(tablename string) (string, error) {
 	return "", err
 }
 
-func GetInsertSql(tablename string, start int, size int) (string, error) {
+func GetInsertSql(tablename string, start int, size int, oper db.DBOperIO) (string, error) {
 	// var sqlstr string
-	var dataList []orm.ParamsList
+	var dataList []db.ParamsList
 	var outstr bytes.Buffer
-	db := orm.NewOrm()
-	num, err := db.Raw(fmt.Sprintf("select * from %s limit %d,%d", tablename, start, size)).ValuesList(&dataList)
+	// db := orm.NewOrm()
+	num, err := oper.Raw(fmt.Sprintf("select * from %s limit %d,%d", tablename, start, size)).ValuesList(&dataList)
 	if err == nil {
 		if num > 0 {
 			var rowstemp bytes.Buffer

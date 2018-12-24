@@ -24,9 +24,9 @@ func (self *ShopController) GetInfo() {
 	webconfig["site_pay_code"] = models.ConfigCache.Get("site_pay_code")
 	webconfig["toppic"] = models.ConfigCache.Get("toppic")
 	data["webconfig"] = webconfig
-	data["webhomeads"] = models.AdsHomeCache.Get("homeads")
-	data["swipe"] = models.AdsHomeCache.Get("swipe")
-	data["notice"] = models.NoticeCache
+	// data["webhomeads"] = models.AdsHomeCache.Get("homeads")
+	// data["swipe"] = models.AdsHomeCache.Get("swipe")
+	// data["notice"] = models.NoticeCache
 
 	self.AjaxReturn(libs.SuccessCode, nil, data)
 }

@@ -1,18 +1,20 @@
 package wechat
 
 import (
-	"github.com/astaxie/beego/logs"
-	"github.com/zyx/shop_server/wechat/oauth"
-
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
+	"github.com/zyx/shop_server/wechat/js"
 	"github.com/zyx/shop_server/wechat/message"
+	"github.com/zyx/shop_server/wechat/oauth"
 )
 
 var Instance *Wechat
 var OauthInstance *oauth.Oauth
+var JsdkInstance *js.Js
 
-func init() {
+func InitWechat() {
 	logs.Info("init wechat")
 	config := &Config{
 		AppID:          beego.AppConfig.String("wechat.appid"),
@@ -20,8 +22,11 @@ func init() {
 		Token:          beego.AppConfig.String("wechat.token"),
 		EncodingAESKey: beego.AppConfig.String("wechat.encodingAESKey"),
 	}
+	config.Cache, _ = cache.NewCache("memory", `{"interval":0}`) //不过期
 	Instance = NewWechat(config)
 	OauthInstance = Instance.GetOauth()
+	JsdkInstance = Instance.GetJs()
+
 }
 
 func Resolve(ctx *context.Context) {

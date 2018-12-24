@@ -844,6 +844,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
 					in := param.ConvertParams(methodParams, method.Type(), context)
+					//logs.Info("begin call :%s %+v", runMethod, methodParams)
 					out := method.Call(in)
 
 					//For backward compatibility we only handle response if we had incoming methodParams
@@ -864,6 +865,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		// finish all runRouter. release resource
+
 		execController.Finish()
 	}
 

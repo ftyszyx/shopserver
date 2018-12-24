@@ -1,0 +1,102 @@
+<!-- <script type="text/javascript" src="/static/js/jquery.validate.min.js"></script> -->
+<!-- <script type="text/javascript" src="/static/js/respond.js"></script> -->
+
+<link rel="stylesheet" type="text/css" href="/static/style/style2.css">
+<link rel="stylesheet" type="text/css" href="/static/style/bootstrap.css">
+<div class="main-wrapper desktop-wrapper" style="margin-top: 100px;">
+
+    <main class="desktop-content">
+
+        <h1>澳邦国际物流中国进境物品申报委托证件管理系统</h1>
+        <h2>Ausbondexpress Identification Management System for China Customs Declaration Purpose</h2>
+
+        <!--       novalidate-->
+        <!-- action="http://www.ausbondexpress.com/plus/sc.php" -->
+        <div method="post">
+            <section class="form-section clear">
+                <div class="row">
+                    <div class="col-md-4" style="padding-top:50px">
+                        <div class="id-front clear">
+                            <img src="/static/images/desktop-front-side.png" alt="" id="idpic1">
+                            <div class="id-front-button">
+                                <span style="padding:5px 5px 5px 5px; border:solid; border-width:1px; ">点击此处选择身份证正面</span>
+                                <input id="idpicinput1" class="id-front-side desktop-input" type="file" name="picfront"
+                                    accept="image/*">
+                            </div>
+                        </div>
+                        <label id="front-side-warning" class="error"></label>
+                    </div>
+                    <div class="col-md-4" style="padding-top:50px">
+
+                        <div class="id-back clear">
+
+                            <img src="/static/images/desktop-back-side.png" alt="" id="idpic2">
+                            <div class="id-back-button">
+                                <span style="padding:5px 5px 5px 5px; border:solid; border-width:1px; ">点击此处选择身份证背面</span>
+                                <input id="idpicinput2" class="id-back-side desktop-input" type="file" name="picback"
+                                    accept="image/*">
+
+                            </div>
+
+                        </div>
+                        <label id="back-side-warning" class="error"></label>
+
+                    </div>
+                    <div class="col-md-4">
+                        <p class="side-message">收件人姓名(上传身份证后自动识别)</p>
+                        <input placeholder="上传身份证后自动识别"  class="desktop-input" type="text" name="name" id="idcardname" value="" placeholder="">
+
+                        <p class="side-message">收件人身份证件号码(上传身份证后自动识别)</p>
+                        <input placeholder="上传身份证后自动识别"  class="desktop-input"  type="text" name="name_no" id="idcardnum"
+                            value="" placeholder="">
+
+
+                        <p class="side-message">收件人手机号码 / Recevier Mobile Number :</p>
+                        <input class="desktop-input"  type="text" name="mobile" id="mobile" value=""
+                            placeholder="">
+                        <label id="mobile-error" class="error"></label>
+
+                    </div>
+                </div>
+                <div class="clear">
+
+                    <p class="side-message">亲:如果身份证号码不清晰,请在手机编辑<strong>裁切身份证周围无用像素</strong>,或者<strong>重新拍摄</strong>对焦清晰的照片。</p>
+                    <br>
+                    <p class="side-message">注意!请联系寄件人确保填写<strong>姓名</strong>与<strong>手机号码</strong>与运单上收件人的信息完全一致,否则将无法正常给您发货证件上传过后如需修改和确认,请重新输入您的个人信息即可。</p>
+                    <br>
+                    <p class="side-message">根据中国海关最新规定,为配合进口货物查验,证明包裹物品确系个人自用,办理海关入境清关手续时需要提交收件人身份证明. 海关相关规定请参考<strong><a>&lt;&lt;中华人民共和国海关对进出境快件监管办法&gt;&gt;第二十二条</a></strong>,或致电海关咨询:
+                        12360</p>
+
+                </div>
+                <div style="width:100%">
+                    <button style="display: block;margin:0 auto;" class="btn btn-default btn-lg active" type="submit" id="submit">提交/Submit</button>
+                    <div id="submit-error" class="error" style="width: 100%;text-align: center;font-weight: bold;">dsdfsd</div>
+                    <div id="submit-success" class="text-success" style="width: 100%;text-align: center;font-weight: bold;font-size: 15px;">tsdddd</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="divfrontimg" hidden=""></div>
+    <div id="divbackimg" hidden=""></div>
+
+    <div id="loading" class="loading">
+        <div style="position: absolute; left: 50%;top:50%">
+            <div style="position: relative; left: -50%;top:-50%;text-align:center;">
+                <img src="/static/images/loading.gif" alt="" style="margin:auto;">
+                <span id="progressNumber" style="color:white;text-align:center;"></span>
+                <br>
+                <span id="progressStatus" style="color:white;text-align:center;"></span>
+            </div>
+        </div>
+    </div>
+   
+<script type="text/javascript" src="/static/js/upload.js"></script>
+
+
+
+
+
+
+
+</div>

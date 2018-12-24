@@ -1,6 +1,7 @@
 /shop.exe
 /shop.exe~
 /conf/app.conf
+/conf/*.conf
 /shop_server.exe
 /shop_server.exe~
 *.exe
@@ -8,3 +9,6 @@
 *.log
 /debug
 /static/upload
+/logs
+/nohup.out
+/node_modules

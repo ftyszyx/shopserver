@@ -77,13 +77,33 @@ web:http://k9xmvz.natappfree.cc
 
 
 wget获取网站：
-wget -r --no-parent http://www.example.com
+wget -r --no-parent -e robots=off http://www.example.com 
+-r 递归
+--no-parent 不访问父节点
+-e robots=off  让wget耍流氓无视robots.txt协议
+-U “Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6” 伪造agent信息
 
 定时任务：
 crontab -e
+第1列分钟0～59
+第2列小时0～23（0表示子夜）
+第3列日1～31
+第4列月1～12
+第5列星期0～7（0和7表示星期天）
+第6列要运行的命令
 
 配置：
 SHELL=/bin/bash
 HOME=/home/code/erp/server
-59 23 * * * bash back.sh 
+59 23 * * 2,4,6 bash back.sh 
+HOME=/home/code/shop_server
+59 22 * * 1,3,5 ./shop_server -conf  shop.conf -backupsql true
+59 23 * * 1,3,5 ./shop_server -conf  ship.conf -backupsql true
+59 1 * * 1,3,5 ./shop_server -conf  ship.conf -updateship true
+40 2 15 * * ./shop_server -conf  ship.conf -cleansystem true
+10 2 15 * * ./shop_server -conf  shop.conf -cleansystem true
 #08 18 * * * bash back.sh
+
+
+
+备用：

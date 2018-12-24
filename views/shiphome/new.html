@@ -1,0 +1,33 @@
+<div class="banner2">
+    <div class="banner-bd"><img src="/static/images/banner_about.jpg"></div>
+    <div class="banner-hd">
+        <div class="wrap clearfix">
+            <div class="colPicTit">
+                <h2>新闻中心</h2>
+                <p>EMPLOYMENT</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container tranAll">
+    <div class="wrap clearfix">
+        <div class="page-content">
+            <div class="ainfo">
+                <h1>{{.postinfo.title}}</h1>
+                <div>发布日期：{{formatTimestamp .postinfo.build_time "Y-m-d H:i"}}</div>
+            </div>
+            <div class="miniPhone miniPhone-ainfo">
+                <h1>{{.postinfo.title}}</h1>
+                <div><span><i class="fa fa-clock-o"></i>{{formatTimestamp .postinfo.build_time "Y-m-d H:i"}}</span><span><i
+                            class="fa fa-eye"></i></span></div>
+            </div>
+            <div class="bd">
+                {{str2html .postinfo.content}}
+                <div class="content-tools">
+                    <a href="/newslist/1"><i class="iconfont icon-navicon"></i>返回列表</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
