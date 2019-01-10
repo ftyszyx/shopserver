@@ -1,0 +1,23 @@
+version: '2'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=aq_shop
+      - MYSQL_USER=zyx
+      - MYSQL_PASSWORD=123456
+    ports: 
+      - "3306:3306"
+    volumes: 
+      - ./mysql:/var/lib/mysql
+    command: [
+    "--character-set-server=utf8mb4",
+    "--collation-server=utf8mb4_unicode_ci"
+    ]
+  db-adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9010:8080

@@ -2,14 +2,14 @@ package routers
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/zyx/shop_server/admin"
+	"github.com/zyx/shop_server/control/home"
 )
 
 func initCompany() {
-	beego.Router("/", &admin.HomeControl{}, "get:Home")
-	beego.Router("/home", &admin.HomeControl{}, "get:Home")
-	beego.Router("/home/index", &admin.HomeControl{}, "get:Home")
-	beego.Router("/home/news", &admin.HomeControl{}, "get:News")
-	beego.Router("/home/products", &admin.HomeControl{}, "get:Products")
-	beego.Router("/home/post/:id", &admin.HomeControl{}, "get:Post")
+	beego.Router("/", &home.HomeControl{}, "get:Home")
+	beego.Router("/home", &home.HomeControl{}, "get:Home")
+	beego.Router("/home/index", &home.HomeControl{}, "get:Home")
+	beego.Router("/home/news", &home.HomeControl{}, "get:News")
+	beego.Router("/home/products", &home.HomeControl{}, "get:Products")
+	beego.Router("/home/post/:id", &home.HomeControl{}, "get:Post")
 }

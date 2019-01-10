@@ -8,14 +8,26 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"
 	"github.com/zyx/shop_server/libs"
 	"github.com/zyx/shop_server/libs/db"
+	"github.com/zyx/shop_server/models/names"
 )
 
 type Model struct {
 	tablename string
-	cache     map[string]db.Params
+	cache     cache.Cache
+}
+
+func NewModel(tablename string, havecache bool) Model {
+	o := new(Model)
+	o.tablename = tablename
+	if havecache {
+		o.cache, _ = cache.NewCache("memory", `{"interval":0}`) //不过期
+	}
+
+	return *o
 }
 
 type ModelInterface interface {
@@ -25,7 +37,7 @@ type ModelInterface interface {
 	InitJoinString(db.SqlType, bool) db.SqlType
 	InitField(db.SqlType) db.SqlType
 
-	Cache() map[string]db.Params
+	Cache() cache.Cache
 	ClearCache()
 	ClearRowCache(string)
 	GetModelStruct() interface{}
@@ -75,10 +87,12 @@ func (self *Model) GetFieldName(name string) string {
 }
 
 func (self *Model) ClearCache() {
-	self.cache = make(map[string]db.Params)
+	if self.cache != nil {
+		self.cache.ClearAll()
+	}
 }
 
-func (self *Model) Cache() map[string]db.Params {
+func (self *Model) Cache() cache.Cache {
 	return self.cache
 }
 
@@ -123,18 +137,28 @@ func (self *Model) CheckExit(oper db.DBOperIO, field string, value interface{}) 
 func (self *Model) GetInfoAndCache(oper db.DBOperIO, uid string, forceUpdate bool) db.Params {
 	if forceUpdate == false {
 		//读旧的
-		info, ok := self.cache[uid]
-		if ok {
-			// logs.Info("old info")
-			return info
+		if self.cache != nil {
+			datatemp := self.cache.Get(uid)
+			if datatemp != nil {
+				info, ok := datatemp.(map[string]interface{})
+				if ok {
+					// logs.Info("old info")
+					return info
+				}
+			}
 		}
+
 	}
 	// logs.Info("find info")
 	// o := orm.NewOrm()
 	var dataList []db.Params
 	num, err := oper.Raw(fmt.Sprintf(`select * from %s where id=?`, self.TableName()), uid).Values(&dataList)
 	if err == nil && num > 0 {
-		self.cache[uid] = dataList[0] //添加
+		if self.cache != nil {
+			self.cache.Put(uid, dataList[0], 0)
+		} else {
+			logs.Error("tablename:%s no cache", self.tablename)
+		}
 		// logs.Info("add info")
 		return dataList[0]
 	}
@@ -202,8 +226,9 @@ func (self *Model) GetInfoByWhere(oper db.DBOperIO, where string) ([]db.Params, 
 
 //清除缓存
 func (self *Model) ClearRowCache(id string) {
-
-	delete(self.cache, id)
+	if self.cache != nil {
+		self.cache.Delete(id)
+	}
 }
 
 //添加日志
@@ -213,7 +238,7 @@ func AddLog(oper db.DBOperIO, uid string, info string, control string, method st
 
 func AddLogLink(oper db.DBOperIO, uid string, info string, control string, method string, link string) {
 	// db := orm.NewOrm()
-	logmodel := GetModel(LOG)
+	logmodel := GetModel(names.LOG)
 	curtime := time.Now().Unix()
 	_, err := oper.Raw(fmt.Sprintf("insert into %s (`userid`,`time`,`info`,`controller`,`method`,`link`) Values (?,?,?,?,?,?)", logmodel.TableName()), uid, curtime, info, control, method, link).Exec()
 	if err != nil {

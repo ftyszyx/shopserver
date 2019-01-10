@@ -1,0 +1,19 @@
+version: '2'
+​services:
+  drone-server:
+    image: houseboy/drone:1.0.0-rc.3
+    restart: always
+    volumes: 
+      - ./drone:/var/lib/drone/:rw
+    environment:
+      - DRONE_OPEN=true
+      - DRONE_CODING=true
+      - DRONE_CODING_CLIENT=25636e8d12d12d25ac89ae608fbfacd5
+      - DRONE_CODING_SECRET=c645d077f20f4b7fe32c703132e0ad0f02423189
+      - DRONE_CODING_URL=https://coding.net
+      - DRONE_CODING_GIT_MACHINE=git.coding.net
+      - DRONE_SERVER_HOST=http://droneserver.ansitong.com
+      - DRONE_SERVER_PROTO=http
+      - DRONE_RPC_SECRET=zyxtest
+    ports:
+      - "droneserver.ansitong.com:80:80"

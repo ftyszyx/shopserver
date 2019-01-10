@@ -1,0 +1,11 @@
+version:'2' #compose文件格式版本号
+services:
+  shop-server:
+    image:golang
+    restart:always
+    environment:
+      - SERVER_CONF_FILE=shop
+    ports:
+      - "apishop.ansitong.com:80:9000"
+    volumes:
+      - ./shopserver:/data

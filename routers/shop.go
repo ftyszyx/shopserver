@@ -2,85 +2,86 @@ package routers
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/zyx/shop_server/admin"
+	"github.com/zyx/shop_server/control/corecontrol"
+	"github.com/zyx/shop_server/control/shop"
 )
 
 func initShop() {
 
 	//商城
-	beego.Router("/shop/getinfo", &admin.ShopController{}, "get:GetInfo")
+	beego.Router("/shop/getinfo", &shop.ShopController{}, "get:GetInfo")
 
 	//广告
-	beego.Router("/ads/all", &admin.AdsController{}, "post:All")
-	beego.Router("/ads/edit", &admin.AdsController{}, "post:Edit")
-	beego.Router("/ads/add", &admin.AdsController{}, "post:Add")
-	beego.Router("/ads/del", &admin.AdsController{}, "post:Del")
+	beego.Router("/ads/all", &corecontrol.AdsController{}, "post:All")
+	beego.Router("/ads/edit", &corecontrol.AdsController{}, "post:Edit")
+	beego.Router("/ads/add", &corecontrol.AdsController{}, "post:Add")
+	beego.Router("/ads/del", &corecontrol.AdsController{}, "post:Del")
 
 	//广告位
-	beego.Router("/adspos/all", &admin.AdsPosController{}, "post:All")
-	beego.Router("/adspos/edit", &admin.AdsPosController{}, "post:Edit")
-	beego.Router("/adspos/add", &admin.AdsPosController{}, "post:Add")
-	beego.Router("/adspos/del", &admin.AdsPosController{}, "post:Del")
+	beego.Router("/adspos/all", &corecontrol.AdsPosController{}, "post:All")
+	beego.Router("/adspos/edit", &corecontrol.AdsPosController{}, "post:Edit")
+	beego.Router("/adspos/add", &corecontrol.AdsPosController{}, "post:Add")
+	beego.Router("/adspos/del", &corecontrol.AdsPosController{}, "post:Del")
 
 	//品牌
-	beego.Router("/ShopBrand/all", &admin.ShopBrandController{}, "post:All")
-	beego.Router("/ShopBrand/edit", &admin.ShopBrandController{}, "post:Edit")
-	beego.Router("/ShopBrand/add", &admin.ShopBrandController{}, "post:Add")
-	beego.Router("/ShopBrand/del", &admin.ShopBrandController{}, "post:Del")
+	beego.Router("/ShopBrand/all", &shop.ShopBrandController{}, "post:All")
+	beego.Router("/ShopBrand/edit", &shop.ShopBrandController{}, "post:Edit")
+	beego.Router("/ShopBrand/add", &shop.ShopBrandController{}, "post:Add")
+	beego.Router("/ShopBrand/del", &shop.ShopBrandController{}, "post:Del")
 
 	//商品
-	beego.Router("/ShopItem/all", &admin.ShopItemController{}, "post:All")
-	beego.Router("/ShopItem/edit", &admin.ShopItemController{}, "post:Edit")
-	beego.Router("/ShopItem/add", &admin.ShopItemController{}, "post:Add")
-	beego.Router("/ShopItem/del", &admin.ShopItemController{}, "post:Del")
-	beego.Router("/ShopItem/ExportCsv", &admin.ShopItemController{}, "post:ExportCsv")
+	beego.Router("/ShopItem/all", &shop.ShopItemController{}, "post:All")
+	beego.Router("/ShopItem/edit", &shop.ShopItemController{}, "post:Edit")
+	beego.Router("/ShopItem/add", &shop.ShopItemController{}, "post:Add")
+	beego.Router("/ShopItem/del", &shop.ShopItemController{}, "post:Del")
+	beego.Router("/ShopItem/ExportCsv", &shop.ShopItemController{}, "post:ExportCsv")
 
 	//商品类型
-	beego.Router("/ShopItemType/all", &admin.ShopItemTypeController{}, "post:All")
-	beego.Router("/ShopItemType/edit", &admin.ShopItemTypeController{}, "post:Edit")
-	beego.Router("/ShopItemType/add", &admin.ShopItemTypeController{}, "post:Add")
-	beego.Router("/ShopItemType/del", &admin.ShopItemTypeController{}, "post:Del")
+	beego.Router("/ShopItemType/all", &shop.ShopItemTypeController{}, "post:All")
+	beego.Router("/ShopItemType/edit", &shop.ShopItemTypeController{}, "post:Edit")
+	beego.Router("/ShopItemType/add", &shop.ShopItemTypeController{}, "post:Add")
+	beego.Router("/ShopItemType/del", &shop.ShopItemTypeController{}, "post:Del")
 
 	//公告
-	beego.Router("/ShopNotice/all", &admin.ShopNoticeController{}, "post:All")
-	beego.Router("/ShopNotice/edit", &admin.ShopNoticeController{}, "post:Edit")
-	beego.Router("/ShopNotice/add", &admin.ShopNoticeController{}, "post:Add")
-	beego.Router("/ShopNotice/del", &admin.ShopNoticeController{}, "post:Del")
+	beego.Router("/ShopNotice/all", &shop.ShopNoticeController{}, "post:All")
+	beego.Router("/ShopNotice/edit", &shop.ShopNoticeController{}, "post:Edit")
+	beego.Router("/ShopNotice/add", &shop.ShopNoticeController{}, "post:Add")
+	beego.Router("/ShopNotice/del", &shop.ShopNoticeController{}, "post:Del")
 
 	//订单
-	beego.Router("/ShopOrder/edit", &admin.ShopOrderController{}, "post:Edit")
-	beego.Router("/ShopOrder/all", &admin.ShopOrderController{}, "post:All")
-	beego.Router("/ShopOrder/add", &admin.ShopOrderController{}, "post:Add")
-	beego.Router("/ShopOrder/orderuploade", &admin.ShopOrderController{}, "post:OrdersUpload")
+	beego.Router("/ShopOrder/edit", &shop.ShopOrderController{}, "post:Edit")
+	beego.Router("/ShopOrder/all", &shop.ShopOrderController{}, "post:All")
+	beego.Router("/ShopOrder/add", &shop.ShopOrderController{}, "post:Add")
+	beego.Router("/ShopOrder/orderuploade", &shop.ShopOrderController{}, "post:OrdersUpload")
 
-	beego.Router("/ShopOrder/GetMyOrder", &admin.ShopOrderController{}, "post:GetMyOrder")
-	beego.Router("/ShopOrder/ExportMyCsv", &admin.ShopOrderController{}, "post:ExportMyCsv")
-	beego.Router("/ShopOrder/ClientClose", &admin.ShopOrderController{}, "post:ClientClose")
-	beego.Router("/ShopOrder/ClientDelOrder", &admin.ShopOrderController{}, "post:ClientDelOrder")
-	beego.Router("/ShopOrder/ClientRefundOrder", &admin.ShopOrderController{}, "post:ClientRefundOrder")
-	beego.Router("/ShopOrder/UpdateIdNum", &admin.ShopOrderController{}, "post:UpdateIdNum")
-	beego.Router("/ShopOrder/ExportCsv", &admin.ShopOrderController{}, "post:ExportCsv")
+	beego.Router("/ShopOrder/GetMyOrder", &shop.ShopOrderController{}, "post:GetMyOrder")
+	beego.Router("/ShopOrder/ExportMyCsv", &shop.ShopOrderController{}, "post:ExportMyCsv")
+	beego.Router("/ShopOrder/ClientClose", &shop.ShopOrderController{}, "post:ClientClose")
+	beego.Router("/ShopOrder/ClientDelOrder", &shop.ShopOrderController{}, "post:ClientDelOrder")
+	beego.Router("/ShopOrder/ClientRefundOrder", &shop.ShopOrderController{}, "post:ClientRefundOrder")
+	beego.Router("/ShopOrder/UpdateIdNum", &shop.ShopOrderController{}, "post:UpdateIdNum")
+	beego.Router("/ShopOrder/ExportCsv", &shop.ShopOrderController{}, "post:ExportCsv")
 
-	beego.Router("/ShopOrder/SetPayOk", &admin.ShopOrderController{}, "post:SetPayOk")
-	beego.Router("/ShopOrder/CheckPayOk", &admin.ShopOrderController{}, "post:CheckPayOk")
-	beego.Router("/ShopOrder/CheckPayNO", &admin.ShopOrderController{}, "post:CheckPayNO")
-	beego.Router("/ShopOrder/ExportToErp", &admin.ShopOrderController{}, "post:ExportToErp")
+	beego.Router("/ShopOrder/SetPayOk", &shop.ShopOrderController{}, "post:SetPayOk")
+	beego.Router("/ShopOrder/CheckPayOk", &shop.ShopOrderController{}, "post:CheckPayOk")
+	beego.Router("/ShopOrder/CheckPayNO", &shop.ShopOrderController{}, "post:CheckPayNO")
+	beego.Router("/ShopOrder/ExportToErp", &shop.ShopOrderController{}, "post:ExportToErp")
 
-	beego.Router("/ShopOrder/UpdateOrderShipNum", &admin.ShopOrderController{}, "post:UpdateOrderShipNum")
-	beego.Router("/ShopOrder/Adminclose", &admin.ShopOrderController{}, "post:Adminclose")
-	beego.Router("/ShopOrder/AdminRefundSure", &admin.ShopOrderController{}, "post:AdminRefundSure")
-	beego.Router("/ShopOrder/GetTotalPayId", &admin.ShopOrderController{}, "post:GetTotalPayId")
-	beego.Router("/ShopOrder/ClientConfirmOrder", &admin.ShopOrderController{}, "post:ClientConfirmOrder")
-	beego.Router("/ShopOrder/AdminConfirmOrder", &admin.ShopOrderController{}, "post:AdminConfirmOrder")
-	beego.Router("/ShopOrder/AdminCancelRefund", &admin.ShopOrderController{}, "post:AdminCancelRefund")
-	beego.Router("/ShopOrder/ClientCancelRefund", &admin.ShopOrderController{}, "post:ClientCancelRefund")
+	beego.Router("/ShopOrder/UpdateOrderShipNum", &shop.ShopOrderController{}, "post:UpdateOrderShipNum")
+	beego.Router("/ShopOrder/Adminclose", &shop.ShopOrderController{}, "post:Adminclose")
+	beego.Router("/ShopOrder/AdminRefundSure", &shop.ShopOrderController{}, "post:AdminRefundSure")
+	beego.Router("/ShopOrder/GetTotalPayId", &shop.ShopOrderController{}, "post:GetTotalPayId")
+	beego.Router("/ShopOrder/ClientConfirmOrder", &shop.ShopOrderController{}, "post:ClientConfirmOrder")
+	beego.Router("/ShopOrder/AdminConfirmOrder", &shop.ShopOrderController{}, "post:AdminConfirmOrder")
+	beego.Router("/ShopOrder/AdminCancelRefund", &shop.ShopOrderController{}, "post:AdminCancelRefund")
+	beego.Router("/ShopOrder/ClientCancelRefund", &shop.ShopOrderController{}, "post:ClientCancelRefund")
 
 	//支付码
-	beego.Router("/paycode/all", &admin.PayCodeController{}, "post:All")
+	beego.Router("/paycode/all", &shop.PayCodeController{}, "post:All")
 
 	//标签
-	beego.Router("/ShopTag/all", &admin.ShopTagController{}, "post:All")
-	beego.Router("/ShopTag/edit", &admin.ShopTagController{}, "post:Edit")
-	beego.Router("/ShopTag/add", &admin.ShopTagController{}, "post:Add")
-	beego.Router("/ShopTag/del", &admin.ShopTagController{}, "post:Del")
+	beego.Router("/ShopTag/all", &shop.ShopTagController{}, "post:All")
+	beego.Router("/ShopTag/edit", &shop.ShopTagController{}, "post:Edit")
+	beego.Router("/ShopTag/add", &shop.ShopTagController{}, "post:Add")
+	beego.Router("/ShopTag/del", &shop.ShopTagController{}, "post:Del")
 }

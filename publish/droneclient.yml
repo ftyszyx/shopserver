@@ -1,0 +1,12 @@
+version: '2'
+​services:
+​  drone-agent:
+    image: houseboy/drone:1.0.0-rc.3
+    command: agent
+    restart: always
+    depends_on: [ drone-server ]
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_SERVER=http://droneserver.ansitong.com
+      - DRONE_RPC_SECRET=zyxtest

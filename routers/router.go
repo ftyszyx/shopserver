@@ -20,16 +20,11 @@ func InitAllRoute() {
 	if appname == "shop" {
 		initLogistics()
 		initShop()
-	}
-
-	//公司物流
-	if appname == "ship" {
+	} else if appname == "ship" {
+		//公司物流
 		initLogistics()
 		initShipHome() //物流前端一些接口
-	}
-
-	//公司首页
-	if appname == "home" {
+	} else if appname == "home" {
 		initCompany() //公司网站
 	}
 }

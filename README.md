@@ -69,6 +69,8 @@ nohup command > myout.file 2>&1 &
 强制类型转换：
 int64(a) 
 
+wechat:
+GET /wchat?signature=968d22aec1a1477d5fab3aa84ad7d900b044abc0&echostr=17150479667081117623&timestamp=1529466263&nonce=483106845 HTTP/1.0 200 0" 0.000311  Mozilla/4.0
 
 netapp -authtoken    d2ca7c6ba422f9dd 
 web:http://k9xmvz.natappfree.cc
@@ -90,4 +92,18 @@ crontab -e
 第5列星期0～7（0和7表示星期天）
 第6列要运行的命令
 
+配置：
+SHELL=/bin/bash
+HOME=/home/code/erp/server
+59 23 * * 2,4,6 bash back.sh 
+HOME=/home/code/shop_server
+59 22 * * 1,3,5 ./shop_server -conf  shop.conf -backupsql true
+59 23 * * 1,3,5 ./shop_server -conf  ship.conf -backupsql true
+59 1 * * 1,3,5 ./shop_server -conf  ship.conf -updateship true
+40 2 15 * * ./shop_server -conf  ship.conf -cleansystem true
+10 2 15 * * ./shop_server -conf  shop.conf -cleansystem true
+#08 18 * * * bash back.sh
 
+
+
+备用：

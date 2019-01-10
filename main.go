@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -14,6 +16,7 @@ import (
 	"github.com/zyx/shop_server/libs"
 	"github.com/zyx/shop_server/libs/baiduai"
 	"github.com/zyx/shop_server/models"
+	"github.com/zyx/shop_server/models/initdata"
 	"github.com/zyx/shop_server/routers"
 	"github.com/zyx/shop_server/wechat"
 )
@@ -42,6 +45,7 @@ var initpaycode bool
 var updateship bool
 var configfile string
 var cleanSystem bool
+var SERVER_CONF_DATA_PATH string
 
 func initParam() {
 	flag.BoolVar(&backupsql, "backupsql", false, "specify backupsql defaults to false.")
@@ -55,7 +59,8 @@ func initParam() {
 func initlog() {
 	//日志
 	logpath := beego.AppConfig.String("server.logpath")
-	fullpath := fmt.Sprintf("logs/%s.log", logpath)
+	fullpath := fmt.Sprintf(SERVER_CONF_DATA_PATH+"logs/%s.log", logpath)
+
 	logs.SetLogger(logs.AdapterFile, fmt.Sprintf(`{"filename":"%s","level":7,"maxlines":0,"maxsize":0,"daily":true,"maxdays":10}`, fullpath))
 
 	logs.EnableFuncCallDepth(true)
@@ -79,68 +84,50 @@ func main() {
 		}
 	}()
 
+	SERVER_CONF_DATA_PATH = os.Getenv("SERVER_CONF_DATA_PATH")
+
 	initParam()
 
-	err := beego.LoadAppConfig("ini", "conf/"+configfile)
+	err := beego.LoadAppConfig("ini", SERVER_CONF_DATA_PATH+"conf/"+configfile)
 	if err != nil {
 		panic(err.Error())
 	}
-
 	initPath()
 	initlog()
-
 	//备份数据库
 	if backupsql == true {
 		models.InitDatabase()
 		saveDatabaseTask()
 		return
-	}
-
-	//当时加了支付码后，为了给老订单生成支付码用的
-	if initpaycode == true {
+	} else if initpaycode == true {
+		//当时加了支付码后，为了给老订单生成支付码用的
 		models.InitDatabase()
-		models.InitModel()
+		initModel()
 		initpaycodeData()
 		return
-	}
-
-	if updateship == true {
+	} else if updateship == true {
 		models.InitDatabase()
-		models.InitModel()
+		initModel()
 		updateAllShip()
 		return
-	}
-
-	if cleanSystem == true {
+	} else if cleanSystem == true {
 		models.InitDatabase()
-		models.InitModel()
+		initModel()
 		CleanSystem()
 		return
 	}
 
+	allowliststr := beego.AppConfig.String("http.allow_orgin")
+	allowlist := strings.Split(allowliststr, ",")
+	logs.Info("allowlist:%v", allowlist)
 	//跨域访问
 	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
-		AllowOrigins: []string{
-			"http://localhost:8100",
-			"http://localhost:8200",
-			"http://localhost:8300",
-			"http://localhost:8400",
-			"http://localhost:8500",
-			"https://open.weixin.qq.com",
-			"http://adminshop.bqmarket.com",
-			"http://adminhome.bqmarket.com",
-			"http://tt9pbr.natappfree.cc",
-			"http://shop.bqmarket.com",
-			"http://ship.bqmarket.com",
-			"http://shoptest.bqmarket.com",
-			"http://adminship.bqmarket.com",
-			"http://testapi.bqmarket.com"},
+		AllowOrigins:     allowlist,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "token", "X_Requested_With", "uid", "x-requested-with", "Authorization", "Access-Control-Allow-Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin"},
 		AllowCredentials: true,
 	}))
-
 	public := beego.AppConfig.String("site.publicname")
 	//定static目录
 	beego.SetStaticPath("/static", "static/"+public)
@@ -148,7 +135,7 @@ func main() {
 	//模块初始化
 	models.InitDatabase()
 	models.InitCaptchaCode()
-	models.InitModel()
+	initModel()
 	routers.InitAllRoute()
 	wechat.InitWechat()
 	baiduai.InitBaiduAiIDcard() //身份证识别
@@ -157,5 +144,15 @@ func main() {
 	beego.AddFuncMap("minus", TempleMinus)
 	beego.AddFuncMap("add", TempleAdd)
 	beego.Run()
+}
 
+func initModel() {
+	appname := beego.AppConfig.String("appname")
+	if appname == "shop" {
+		initdata.InitShopModel()
+	} else if appname == "ship" {
+		initdata.InitLogisticsModel()
+	} else if appname == "home" {
+		initdata.InitHomeModel()
+	}
 }

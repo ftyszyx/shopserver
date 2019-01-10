@@ -1,0 +1,11 @@
+#mysql服务器
+version:'2' 
+services:
+  nginx:
+    image:nginx
+    restart:always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/log:/var/log/nginx

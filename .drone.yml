@@ -1,0 +1,22 @@
+workspace:
+  base: /go
+  path: src/github.com/zyx/shop_server
+
+pipeline:
+  build:
+    image: golang:1.8
+    commands: [
+      "go build -o release/shop_server"
+    ]
+    secrets: [ ssh_key ]
+    when:
+      event: [ push, tag ]
+  publish_server:
+    image: plugins/docker
+    repo: ftyszyx/shopserver
+    dockerfile: Dockerfile
+    secrets: [ docker_username, docker_password ]
+    tag: [ latest ]
+    when:
+      branch: master
+      event: push

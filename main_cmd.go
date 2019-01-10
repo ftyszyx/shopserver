@@ -9,16 +9,21 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/zyx/shop_server/admin"
+
+	"github.com/zyx/shop_server/control/corecontrol"
 	"github.com/zyx/shop_server/libs"
 	"github.com/zyx/shop_server/libs/db"
 	"github.com/zyx/shop_server/models"
+	"github.com/zyx/shop_server/models/coredata"
+	"github.com/zyx/shop_server/models/logistics"
+	"github.com/zyx/shop_server/models/names"
+	"github.com/zyx/shop_server/models/shop"
 )
 
 //数据库备份
 func saveDatabaseTask() {
 	dboper := db.NewOper()
-	path, err := admin.SaveDatabase(dboper)
+	path, err := corecontrol.SaveDatabase(dboper)
 	if err != nil {
 		logs.Error("back up system err:%", err.Error())
 	}
@@ -39,7 +44,7 @@ func saveDatabaseTask() {
 func updateAllShip() {
 	dboper := db.NewOper()
 	curtime := time.Now().Unix()
-	logisticsModel := models.GetModel(models.LOGISTICS).(*models.Logistics)
+	logisticsModel := models.GetModel(names.LOGISTICS).(*logistics.Logistics)
 
 	res, err := logisticsModel.GetInfoByWhere(dboper, fmt.Sprintf("`logistics_task_starttime`<%d and  `state` <> %d and `id` like ", curtime, libs.ShipOverseaOverValue)+"'AB%AU'")
 	if err != nil {
@@ -60,8 +65,8 @@ func updateAllShip() {
 
 //批量给订单生成支付码（不用了)
 func initpaycodeData() {
-	paycodeModel := models.GetModel(models.LOGISTICS).(*models.PayCode)
-	orderModel := models.GetModel(models.SHOP_ORDER).(*models.ShopOrder)
+	paycodeModel := models.GetModel(names.LOGISTICS).(*shop.PayCode)
+	orderModel := models.GetModel(names.SHOP_ORDER).(*shop.ShopOrder)
 
 	dboper := db.NewOper()
 	var dataList []db.Params
@@ -99,8 +104,8 @@ func CleanSystem() {
 	host := beego.AppConfig.String("qiniu.host")
 	bucket := beego.AppConfig.String("qiniu.bucket")
 
-	DatabaseModel := models.GetModel(models.DATABASE).(*models.DataBase)
-	ExportTaskModel := models.GetModel(models.EXPORT_TASK).(*models.ExportTask)
+	DatabaseModel := models.GetModel(names.DATABASE).(*coredata.DataBase)
+	ExportTaskModel := models.GetModel(names.EXPORT_TASK).(*coredata.ExportTask)
 
 	//清除数据库备份
 	var dataList []db.Params
